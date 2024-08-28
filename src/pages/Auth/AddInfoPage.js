@@ -1,7 +1,8 @@
-import { Component } from "react";
-import { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { ExtraInfoContext } from "../../contexts/ExtraInfoContext";
+import axios from "axios";
 
 
 const MainContainer = styled.div`
@@ -75,11 +76,11 @@ const Select = styled.select`
 const AddInfoButton = styled.button`
   width: 130px;
   height: 50px;
-  background-color: #FFFFFF;
+  background-color: ${({ isValid }) => (isValid === true ? '#00656D' : '#FFFFFF')};
+  color: ${({ isValid }) => (isValid === true ? '#FFFFFF' : '#00656D')};
   border-radius: 8px;
   border: 2px solid #00656D;
   font-size: 20px;
-  color: #00656D;
   white-space: nowrap;
   font-weight: regular;
 
@@ -131,14 +132,48 @@ const NextButton = styled.button`
 const AddInfoPage = () => {
 
   const navigate = useNavigate();
+  const { extraInfo, setExtraInfo } = useContext(ExtraInfoContext)
 
-  const handlelikeScent = () => {
+  const [nickname, setNickname] = useState(extraInfo.nickname || '');
+  const [isNicknameValid, setIsNicknameValid] = useState(null);
+  const [gender, setGender] = useState(extraInfo.gender || '');
+  const [age, setAge] = useState(extraInfo.age || '');
+  const [season, setSeason] = useState(extraInfo.season || '');
+
+  const handleNicknameCheck = async () => {
+
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_KEY}/auth/isExist/${nickname}`);
+      const { code, result } = response;
+
+      setIsNicknameValid(!result); // 중복이면 false, 사용 가능하면 true
+      alert(result ? "닉네임이 이미 사용 중입니다." : "닉네임 사용 가능합니다.");
+
+      if (code === "0000") {
+        setIsNicknameValid(!result); // 중복이면 false, 사용 가능하면 true
+        alert(result ? "닉네임이 이미 사용 중입니다." : "닉네임 사용 가능합니다.");
+      }
+    } catch (error) {
+      console.error("닉네임 중복 확인 오류:", error);
+      alert("닉네임 중복 확인 오류");
+    }
+  };
+
+  const handleNextClick = () => {
+    setExtraInfo((prevInfo) => ({
+      ...prevInfo,
+      nickname,
+      gender,
+      age,
+      season
+    }));
     navigate('/likeScent');
-  }
+  };
 
   const [clickedButton, setClickedButton] = useState(null);
 
   const handleSeasonClick = (season) => {
+    setSeason(season);
     setClickedButton(season);
   };
 
@@ -148,33 +183,46 @@ const AddInfoPage = () => {
       <FormContainer>
         <Label>닉네임 *</Label>
         <InfoContainer>
-          <Input type="text" placeholder="닉네임을 입력해주세요." />
-          <AddInfoButton>중복 확인</AddInfoButton>
+          <Input type="text"
+          placeholder="닉네임을 입력해주세요."
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          />
+          <AddInfoButton
+            onClick={handleNicknameCheck}
+            isValid={isNicknameValid}  // 상태에 따라 스타일 변경
+          >중복 확인</AddInfoButton>
         </InfoContainer>
       </FormContainer>
       <FormContainer>
         <Label>선호하는 향수 성별 *</Label>
         <InfoContainer>
-          <Select>
-            <option value="" disabled selected></option>
-            <option value="option1">남성</option>
-            <option value="option2">여성</option>
-            <option value="option3">중성</option>
+          <Select
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
+          >
+            <option value="" disabled></option>
+            <option value="MALE">남성</option>
+            <option value="FEMALE">여성</option>
+            <option value="BOTH">중성</option>
           </Select>
         </InfoContainer>
       </FormContainer>
       <FormContainer>
         <Label>연령대 *</Label>
         <InfoContainer>
-          <Select>
-            <option value="" disabled selected></option>
-            <option value="option1">10대</option>
-            <option value="option2">20대</option>
-            <option value="option3">30대</option>
-            <option value="option4">40대</option>
-            <option value="option5">50대</option>
-            <option value="option6">60대</option>
-            <option value="option7">60대 이상</option>
+          <Select
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+          >
+            <option value="" disabled></option>
+            <option value="AGE10">10대</option>
+            <option value="AGE20">20대</option>
+            <option value="AGE30">30대</option>
+            <option value="AGE40">40대</option>
+            <option value="AGE50">50대</option>
+            <option value="AGE60">60대</option>
+            <option value="60대 이상">60대 이상</option>
           </Select>
         </InfoContainer>
       </FormContainer>
@@ -207,7 +255,7 @@ const AddInfoPage = () => {
           </SeasonButton>
         </InfoContainer>
       </FormContainer>
-      <NextButton onClick={handlelikeScent}>다음으로 이동하기</NextButton>
+      <NextButton onClick={handleNextClick}>다음으로 이동하기</NextButton>
     </MainContainer>
   )
 }

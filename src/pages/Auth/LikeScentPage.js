@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import aldehydeC18 from '../../assets/images/Flavors/Aldehyde C18.jpg';
@@ -33,6 +33,7 @@ import sandalwood from '../../assets/images/Flavors/Sandalwood.jpg';
 import thyme from '../../assets/images/Flavors/thyme.jpg';
 import vanilla from '../../assets/images/Flavors/vanilla.jpg';
 import whitemusk from '../../assets/images/Flavors/whitemusk.jpg';
+import { ExtraInfoContext } from "../../contexts/ExtraInfoContext";
 
 
 const MainContainer = styled.div`
@@ -125,17 +126,63 @@ const NextButton = styled.button`
   }
 `;
 
+const labelToEnglishMap = {
+  "알데하이드 C18": "ALDEHYDE",
+  "엠버": "AMBER",
+  "아쿠아": "AQUAL",
+  "베르가못": "BERGAMOT",
+  "블랙 체리": "BLACKCHERRY",
+  "블랙 커런트": "BLACKCURRENT",
+  "블랙페퍼": "PEPPER",
+  "시더우드": "CEDAR",
+  "무화과": "FIG",
+  "프랑킨센스": "FRANKINCENSE",
+  "프리지아": "FREESIA",
+  "자몽": "GRAPEFRUIT",
+  "그린": "GREEN",
+  "히노키": "HINOKI",
+  "레더": "LEATHER",
+  "레몬": "LEMON",
+  "릴리 오브 더 밸리": "LILYOFTHEVALLEY",
+  "매그놀리아": "MAGNOLIA",
+  "마린 블루": "BLUEMARIN",
+  "민트": "MINT",
+  "뮤게": "MUGUET",
+  "오션": "OCEAN",
+  "패츌리": "PATCHOULI",
+  "피치": "PEACH",
+  "로즈": "ROSE",
+  "로즈마리": "ROSEMARY",
+  "샌달우드": "SANDALWOOD",
+  "타임": "THYME",
+  "바닐라": "VANILLA",
+  "화이트 머스크": "MUSK"
+};
 
 const LikeScentPage = () => {
 
   const navigate = useNavigate();
 
-  const handleUnlikeScent = () => {
-    navigate('/UnlikeScent');
-  }
+  const { extraInfo, setExtraInfo } = useContext(ExtraInfoContext);
+  const [selectedImages, setSelectedImages] = useState(extraInfo.likedScents || []);
+
+  const handleNextClick = () => {
+    if (selectedImages.length !== 5) {
+      alert("5개를 선택해주세요.");
+      return; // 5개가 아닌 경우 함수 실행을 멈추고 경고 메시지를 표시합니다.
+    }
+
+    const englishNames = selectedImages.map(label => labelToEnglishMap[label]);
+
+    setExtraInfo((prevInfo) => ({
+      ...prevInfo,
+      likedScents: englishNames,
+    }));
+    navigate('/unlikeScent');
+  };
 
   const images = [
-    { src: aldehydeC18, label: "알데하이드 C18" },
+    { src: aldehydeC18, label: "알데하이드 C18", value: "ALDEHYDE" },
     { src: amber, label: "엠버" },
     { src: aqua, label: "아쿠아" },
     { src: bergamot, label: "베르가못" },
@@ -167,8 +214,6 @@ const LikeScentPage = () => {
     { src: whitemusk, label: "화이트 머스크" }
   ];
 
-  const [selectedImages, setSelectedImages] = useState([]);
-
   const handleImageClick = (label) => {
     if (selectedImages.includes(label)) {
       setSelectedImages(selectedImages.filter((item) => item !== label));
@@ -197,7 +242,7 @@ const LikeScentPage = () => {
           </ImageContainer>
         ))}
       </GridContainer>
-      <NextButton onClick={handleUnlikeScent}>다음으로 이동하기</NextButton>
+      <NextButton onClick={handleNextClick}>다음으로 이동하기</NextButton>
     </MainContainer>
   );
 };

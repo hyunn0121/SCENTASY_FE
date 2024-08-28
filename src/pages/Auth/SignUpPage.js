@@ -149,6 +149,14 @@ const SignUpPage = () => {
   const navigate = useNavigate();
 
   const handleAddInfoClick = async () => {
+    if (email === '') {
+      alert("이메일을 입력하세요.");
+      return;
+    }
+    if (password === '') {
+      alert("비밀번호를 입력하세요.");
+      return;
+    }
     if (!isEmailValid || hasErrors) {
       alert("올바른 이메일과 비밀번호를 입력해주세요.");
       return;
@@ -160,20 +168,39 @@ const SignUpPage = () => {
         password,
       });
 
-      console.log(process.env.REACT_APP_API_KEY)
-      console.log("Response:", response); // 서버 응답 전체를 콘솔에 출력
-      console.log("Response Status:", response.status); // 서버 응답 상태 코드를 콘솔에 출력
+      const { code, message, result } = response.data;
+      console.log(response);
 
-      if (response.status === 200) {
+      alert('회원가입이 완료되었습니다.');
+      navigate('/addInfo');
+
+      /*
+      if (code === "0000") {
         alert('회원가입이 완료되었습니다.');
         navigate('/addInfo');
+      } else if (code === "4201") {
+        alert("중복된 이메일입니다. 다른 이메일로 다시 시도해주세요.")
+        // alert(`회원가입 실패: ${message} (코드: ${code})`);
       } else {
-        alert('회원가입이 실패했습니다. 다시 시도해주세요.');
-      }
+        alert("회원가입에 실패했습니다. 다시 시도해주세요.")
+        alert(`회원가입 실패: ${message} (코드: ${code})`);
+      } */
     } catch (error) {
       console.error("회원가입 중 오류 발생: ", error);
       alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+    
+      // 오류 세부 정보를 출력
+      if (error.response) {
+        console.error("응답 데이터:", error.response.data);
+        console.error("응답 상태:", error.response.status);
+        console.error("응답 헤더:", error.response.headers);
+      } else if (error.request) {
+        console.error("요청이 전송되었으나 응답이 수신되지 않음:", error.request);
+      } else {
+        console.error("요청 설정 중 오류 발생:", error.message);
+      }
     }
+    
   };
 
   const [email, setEmail] = useState('');
@@ -205,7 +232,7 @@ const SignUpPage = () => {
     if (value === '') {
       setPasswordError('');
     } else if (!passwordRegex.test(value)) {
-      setPasswordError('비밀번호 형식이 올바르지 않습니다. 최소 8자 이상이어야 하며, 숫자와 문자를 포함해야 합니다.');
+      setPasswordError('최소 8자 이상이어야 하며, 숫자와 영문자를 포함해야 합니다.');
     } else {
       setPasswordError('');
     }

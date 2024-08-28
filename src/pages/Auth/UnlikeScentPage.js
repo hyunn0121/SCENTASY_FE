@@ -1,7 +1,8 @@
 import React from "react";
 import styled from "styled-components";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 import aldehydeC18 from '../../assets/images/Flavors/Aldehyde C18.jpg';
 import amber from '../../assets/images/Flavors/amber.jpg';
@@ -33,6 +34,7 @@ import sandalwood from '../../assets/images/Flavors/Sandalwood.jpg';
 import thyme from '../../assets/images/Flavors/thyme.jpg';
 import vanilla from '../../assets/images/Flavors/vanilla.jpg';
 import whitemusk from '../../assets/images/Flavors/whitemusk.jpg';
+import { ExtraInfoContext } from "../../contexts/ExtraInfoContext";
 
 
 const MainContainer = styled.div`
@@ -125,13 +127,100 @@ const NextButton = styled.button`
   }
 `;
 
+const labelToEnglishMap = {
+  "알데하이드 C18": "ALDEHYDE",
+  "엠버": "AMBER",
+  "아쿠아": "AQUAL",
+  "베르가못": "BERGAMOT",
+  "블랙 체리": "BLACKCHERRY",
+  "블랙 커런트": "BLACKCURRENT",
+  "블랙페퍼": "PEPPER",
+  "시더우드": "CEDAR",
+  "무화과": "FIG",
+  "프랑킨센스": "FRANKINCENSE",
+  "프리지아": "FREESIA",
+  "자몽": "GRAPEFRUIT",
+  "그린": "GREEN",
+  "히노키": "HINOKI",
+  "레더": "LEATHER",
+  "레몬": "LEMON",
+  "릴리 오브 더 밸리": "LILYOFTHEVALLEY",
+  "매그놀리아": "MAGNOLIA",
+  "마린 블루": "BLUEMARIN",
+  "민트": "MINT",
+  "뮤게": "MUGUET",
+  "오션": "OCEAN",
+  "패츌리": "PATCHOULI",
+  "피치": "PEACH",
+  "로즈": "ROSE",
+  "로즈마리": "ROSEMARY",
+  "샌달우드": "SANDALWOOD",
+  "타임": "THYME",
+  "바닐라": "VANILLA",
+  "화이트 머스크": "MUSK"
+};
+
 
 const UnlikeScentPage = () => {
 
   const navigate = useNavigate();
+  const { extraInfo, setExtraInfo } = useContext(ExtraInfoContext);
+  const [selectedImages, setSelectedImages] = useState(extraInfo.dislikedScents || []);
 
-  const handleUnlikeScent = () => {
-    navigate('/UnlikeScent');
+  const englishNames = selectedImages.map(label => labelToEnglishMap[label]);
+
+  const handleComplete = async () => {
+    
+    if (selectedImages.length !== 5) {
+      alert("5개를 선택해주세요.");
+      return; // 5개가 아닌 경우 함수 실행을 멈추고 경고 메시지를 표시합니다.
+    }
+
+    setExtraInfo((prevInfo) => ({
+      ...prevInfo,
+      dislikedScents: englishNames,
+    }));
+
+    // 로그를 추가하여 선택한 값들을 확인
+    console.log("닉네임:", extraInfo.nickname);
+    console.log("성별:", extraInfo.gender);
+    console.log("연령대:", extraInfo.age);
+    console.log("선호하는 계절:", extraInfo.season);
+    console.log("좋아하는 향:", extraInfo.likedScents);
+    console.log("싫어하는 향:", englishNames);
+
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_KEY}/auth/extra-info?email=${extraInfo.email}`,
+        {
+          nickname: extraInfo.nickname,
+          gender: extraInfo.gender,
+          age: extraInfo.age,
+          season: extraInfo.season,
+          likedScents: extraInfo.likedScents,
+          dislikedScents: englishNames,
+        }
+      );
+
+      const { code, message, result } = response.data;
+
+      alert('추가정보 입력이 완료되었습니다.');
+      navigate('/chat');
+
+      /*
+      if (code === "0000") {
+        alert('추가정보 입력이 완료되었습니다.');
+        navigate('/chat');
+      } else if (code === "4100") {
+        alert(`중복된 이메일입니다. 다른 이메일로 다시 시도해주세요: ${message} (코드: ${code})`);
+        // alert(`회원가입 실패: ${message} (코드: ${code})`);
+      } else {
+        alert("추가정보 입력에 실패했습니다. 다시 시도해주세요.")
+      } */
+    } catch (error) {
+      console.error("추가정보 입력 중 오류 발생: ", error);
+      alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
   }
 
   const images = [
@@ -167,7 +256,6 @@ const UnlikeScentPage = () => {
     { src: whitemusk, label: "화이트 머스크" }
   ];
 
-  const [selectedImages, setSelectedImages] = useState([]);
 
   const handleImageClick = (label) => {
     if (selectedImages.includes(label)) {
@@ -197,9 +285,10 @@ const UnlikeScentPage = () => {
           </ImageContainer>
         ))}
       </GridContainer>
-      <NextButton onClick={handleUnlikeScent}>회원가입 완료하기</NextButton>
+      <NextButton onClick={handleComplete}>추가정보 입력 완료하기</NextButton>
     </MainContainer>
   );
 };
+
 
 export default UnlikeScentPage;
