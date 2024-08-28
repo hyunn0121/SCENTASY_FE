@@ -132,7 +132,7 @@ const labelToEnglishMap = {
   "아쿠아": "AQUAL",
   "베르가못": "BERGAMOT",
   "블랙 체리": "BLACKCHERRY",
-  "블랙 커런트": "BLACKCURRENT",
+  "블랙 커런트": "BLACKCURRANT",
   "블랙페퍼": "PEPPER",
   "시더우드": "CEDAR",
   "무화과": "FIG",

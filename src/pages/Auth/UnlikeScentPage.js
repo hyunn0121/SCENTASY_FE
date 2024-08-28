@@ -133,7 +133,7 @@ const labelToEnglishMap = {
   "아쿠아": "AQUAL",
   "베르가못": "BERGAMOT",
   "블랙 체리": "BLACKCHERRY",
-  "블랙 커런트": "BLACKCURRENT",
+  "블랙 커런트": "BLACKCURRANT",
   "블랙페퍼": "PEPPER",
   "시더우드": "CEDAR",
   "무화과": "FIG",
@@ -205,7 +205,7 @@ const UnlikeScentPage = () => {
       const { code, message, result } = response.data;
 
       alert('추가정보 입력이 완료되었습니다.');
-      navigate('/chat');
+      navigate('/about');
 
       /*
       if (code === "0000") {

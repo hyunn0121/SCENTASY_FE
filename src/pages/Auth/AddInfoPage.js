@@ -129,6 +129,13 @@ const NextButton = styled.button`
   }
 `;
 
+const seasonMapping = {
+  "봄": "SPRING",
+  "여름": "SUMMER",
+  "가을": "FALL",
+  "겨울": "WINTER"
+};
+
 const AddInfoPage = () => {
 
   const navigate = useNavigate();
@@ -144,6 +151,7 @@ const AddInfoPage = () => {
 
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_KEY}/auth/isExist/${nickname}`);
+      console.log(response);
       const { code, result } = response;
 
       setIsNicknameValid(!result); // 중복이면 false, 사용 가능하면 true
@@ -172,9 +180,9 @@ const AddInfoPage = () => {
 
   const [clickedButton, setClickedButton] = useState(null);
 
-  const handleSeasonClick = (season) => {
-    setSeason(season);
-    setClickedButton(season);
+  const handleSeasonClick = (selectedSeason) => {
+    setSeason(seasonMapping[selectedSeason]); // 서버로 보낼 값을 설정
+    setClickedButton(selectedSeason); // 화면에 표시할 값을 설정
   };
 
   return (

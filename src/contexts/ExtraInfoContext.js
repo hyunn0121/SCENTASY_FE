@@ -4,6 +4,7 @@ export const ExtraInfoContext = createContext();
 
 export const ExtraInfoProvider = ({ children}) => {
   const [extraInfo, setExtraInfo] = useState({
+    email: "",
     nickname: "",
     gender: "",
     age: "",

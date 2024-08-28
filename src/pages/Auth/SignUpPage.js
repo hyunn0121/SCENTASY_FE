@@ -1,7 +1,8 @@
 import React from "react";
 import styled from "styled-components";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from 'react-router-dom';
+import { ExtraInfoContext } from "../../contexts/ExtraInfoContext";
 import axios from "axios";
 
 
@@ -147,6 +148,7 @@ const SocialButton = styled.img`
 const SignUpPage = () => {
 
   const navigate = useNavigate();
+  const { setExtraInfo } = useContext(ExtraInfoContext);
 
   const handleAddInfoClick = async () => {
     if (email === '') {
@@ -170,6 +172,12 @@ const SignUpPage = () => {
 
       const { code, message, result } = response.data;
       console.log(response);
+
+      // 이메일을 extraInfo에 저장
+      setExtraInfo((prevInfo) => ({
+        ...prevInfo,
+        email: email,  // 이메일 저장
+      }));
 
       alert('회원가입이 완료되었습니다.');
       navigate('/addInfo');
