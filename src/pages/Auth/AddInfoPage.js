@@ -150,7 +150,7 @@ const AddInfoPage = () => {
   const handleNicknameCheck = async () => {
 
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_KEY}/auth/isExist/${nickname}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_KEY}/auth/exists/${nickname}`);
       console.log(response);
       const { code, result } = response;
 
