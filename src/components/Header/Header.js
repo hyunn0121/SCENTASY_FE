@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useContext} from 'react';
 import './Header.css';
 import logo from '../../assets/images/logo.png';
+import { ExtraInfoContext } from '../../contexts/ExtraInfoContext';
 
 const Header = () => {
+
+    const { extraInfo } = useContext(ExtraInfoContext);
+    const nickname = extraInfo.nickname;
+
     return (
         <header className="header">
             <div className="logo-container">
@@ -10,7 +15,7 @@ const Header = () => {
             </div>
             <nav className="nav">
                 <ul>
-                    <li><a href="#about">About</a></li>
+                    <li><a href="/about">About</a></li>
                     <li><a href="/chat">Chat</a></li>
                     <li><a href="#calendar">Calendar</a></li>
                     <li><a href="#community">Community</a></li>
@@ -18,9 +23,12 @@ const Header = () => {
                 </ul>
             </nav>
             <div className="login">
-                <a href="#login">LOGIN</a>
-                <span>님 안녕하세요!</span>
-                <i className="settings-icon">⚙️</i>
+                {nickname ? (
+                <span>{nickname}님 안녕하세요!</span>
+            ) : (
+                <a href="/login">LOGIN</a>
+            )}
+            <i className="settings-icon">⚙️</i>
             </div>
         </header>
     );
