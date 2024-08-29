@@ -1,8 +1,10 @@
 import logo from './logo.svg';
 import './App.css';
 import Header from './components/Header/Header';
-import MainContent from './pages/MainPage/MainPage';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import MainContent from './pages/MainPage/MainPage';
+
+import ChatPage from './pages/Chat/ChatPage';
 import LoginPage from './pages/Auth/LoginPage';
 import SignUpPage from './pages/Auth/SignUpPage';
 import MainPage from './pages/MainPage/MainPage';
@@ -20,6 +22,7 @@ function App() {
           <Routes>
             <Route exact path="/" element={<MainPage />} />
             <Route path="/about" element={<MainPage />} />
+            <Route path="/chat" element={<ChatPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/addInfo" element={<AddInfoPage />} />

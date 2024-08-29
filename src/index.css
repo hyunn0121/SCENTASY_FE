@@ -1,3 +1,49 @@
+@font-face {
+  font-family: "Pretendard-Thin";
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url("./assets/font/Pretendard-Thin.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-ExtraLight";
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url("./assets/font/Pretendard-ExtraLight.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-Black";
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+  src: url("./assets/font/Pretendard-Black.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-Regular";
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+  src: url("./assets/font/Pretendard-Regular.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-Bold";
+  font-style: bold;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/font/Pretendard-Bold.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Pretendard-SemiBold";
+  font-display: swap;
+  src: url("./assets/font/Pretendard-SemiBold.woff") format("woff");
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

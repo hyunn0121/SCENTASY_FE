@@ -1,7 +1,17 @@
 .header {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between; /* 공간을 균등하게 배분 */
+    align-items: center; /* 아이템을 수직 가운데 정렬 */
     padding: 20px;
+}
+
+.logo-container {
+    margin-right: auto; /* 로고를 왼쪽에 고정 */
+    padding: 15px;
+}
+
+.logo {
+    height: 30px; /* 로고의 높이 조정 */
 }
 
 .nav ul {
@@ -62,7 +72,6 @@
 .nav a:hover::after {
     width: 20px; /* 마우스 오버 시 밑줄 너비 확장 */
 }
-
 
 .login {
     display: flex;
