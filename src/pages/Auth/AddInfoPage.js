@@ -151,30 +151,36 @@ const AddInfoPage = () => {
 
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_KEY}/auth/exists/${nickname}`);
-      console.log(response);
-      const { code, result } = response;
-
-      setIsNicknameValid(!result); // 중복이면 false, 사용 가능하면 true
-      alert(result ? "닉네임이 이미 사용 중입니다." : "닉네임 사용 가능합니다.");
+      console.log(response); // 응답 구조 확인
+      const { code, result } = response.data; // 응답 데이터에서 code와 result 추출
 
       if (code === "0000") {
-        setIsNicknameValid(!result); // 중복이면 false, 사용 가능하면 true
-        alert(result ? "닉네임이 이미 사용 중입니다." : "닉네임 사용 가능합니다.");
+          if (result) {
+              alert("닉네임이 이미 사용 중입니다.");
+              setIsNicknameValid(false);
+          } else {
+              alert("닉네임 사용 가능합니다.");
+              setIsNicknameValid(true);
+          }
+      } else if (code === "4202") {
+          alert("이미 존재하는 닉네임입니다. 다른 이름을 입력해주세요.");
+          setIsNicknameValid(false);
+      } else {
+          alert("닉네임은 영문만 가능합니다. 다시 확인해주세요.");
+          setIsNicknameValid(false);
       }
-    } catch (error) {
+  } catch (error) {
       console.error("닉네임 중복 확인 오류:", error);
       alert("닉네임 중복 확인 오류");
-    }
+  }
   };
 
   const handleNextClick = () => {
-    setExtraInfo((prevInfo) => ({
-      ...prevInfo,
-      nickname,
-      gender,
-      age,
-      season
-    }));
+    localStorage.setItem('tempNickname', nickname);
+    localStorage.setItem('gender', gender);
+    localStorage.setItem('age', age);
+    localStorage.setItem('season', season);
+    
     navigate('/likeScent');
   };
 

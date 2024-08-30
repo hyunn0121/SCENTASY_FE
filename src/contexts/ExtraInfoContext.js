@@ -6,11 +6,13 @@ export const ExtraInfoProvider = ({ children}) => {
   const [extraInfo, setExtraInfo] = useState({
     email: "",
     nickname: "",
+    tempNickname: "",
     gender: "",
     age: "",
     season: "",
     likedScents: [],
-    dislikedScents: []
+    dislikedScents: [],
+    isLoggedIn: false,
     });
 
     return (

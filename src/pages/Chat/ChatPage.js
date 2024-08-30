@@ -46,21 +46,20 @@ const MessageList = styled.div`
 const Message = styled.div`
   display: flex;
   margin-bottom: 20px;
-  white-space: nowrap;
-  justify-content: ${props => (props.isUser ? 'flex-end' : 'flex-start')};
-`;
-
-const MessageWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  justify-content: ${props => (props.isUser ? 'flex-end' : 'flex-start')}; // 사용자 메시지는 오른쪽, 챗봇 메시지는 왼쪽
 `;
 
 const ProfileImage = styled.img`
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  margin: ${props => (props.isUser ? '0 0 0 10px' : '0 10px 0 0')};
+  margin: ${props => (props.isUser ? '0 0 0 10px' : '0 10px 0 0')}; // 사용자 메시지 이미지와 챗봇 메시지 이미지의 위치 조정
+`;
+
+const MessageWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: ${props => (props.isUser ? 'flex-end' : 'flex-start')}; // 사용자 메시지와 챗봇 메시지의 텍스트 정렬 조정
 `;
 
 const MessageContent = styled.div`
@@ -263,6 +262,9 @@ const ChattingPage = () => {
       if (currentChatId === null) {
         currentChatId = chatList.length;
         setChatList([...chatList, { id: currentChatId, name: `Chat ${currentChatId + 1}` }]);
+
+        // 새로운 채팅방 생성 후 해당 채팅방을 자동으로 선택
+        setSelectedChat(currentChatId);
       }
   
       // 메시지를 채팅 리스트에 추가
@@ -283,7 +285,7 @@ const ChattingPage = () => {
 
         // localStorage에서 토큰 가져오기
         const accessToken = localStorage.getItem('accessToken');
-        const memberId = 1;
+        const memberId = 9;
         
         if (!accessToken) {
           throw new Error('No access token found');
@@ -293,7 +295,7 @@ const ChattingPage = () => {
           throw new Error('No access token found');
         }
 
-        const url = `/api/chats/${memberId}`;
+        const url = `${process.env.REACT_APP_API_KEY}/api/chats/${memberId}`;
 
         // 서버에 메시지 전송
         const response = await fetch(url, {
@@ -311,40 +313,37 @@ const ChattingPage = () => {
           const errorText = await response.text(); // 응답의 텍스트를 읽어들임
           throw new Error(`Network response was not ok. Status: ${response.status}, Text: ${errorText}`);
         }
-  
-        const data = await response.json();
-        const botMessage = {
-          text: data.response,
-          isUser: false,
-          time: new Date().toLocaleTimeString()
-        };
-  
-        newMessages[currentChatId].push(botMessage);
-        setMessages({ ...newMessages });
 
-        setResponseCount(prevCount => {
-          const newCount = prevCount + 1;
-          console.log(`Response Count: ${newCount}`);
-          setShowPopup(true); // 조건 없이 팝업을 무조건 표시
-          return newCount;
-        });
+        // 응답을 JSON으로 파싱
+        const responseData = await response.json();
 
-        // 응답 카운트 업데이트
-        setResponseCount(prevCount => {
-          const newCount = prevCount +1;
-          console.log(`Response Count: ${newCount}`);
+        // 응답에서 code와 data를 추출
+        const { code, data } = responseData;
+        const BotResponse  = data.response;
 
-          if (newCount === 5) {
-            console.log('Showing Popup'); // 팝업 표시 확인
-            setShowPopup(true); // 팝업 표시 상태 업데이트
-          }
+        // code가 성공 상태인 경우에만 처리
+        if (code === "0000") {
+          const botMessage = {
+            text: data.response,
+            isUser: false,
+            time: new Date().toLocaleTimeString(),
+          };
 
-          return newCount;
-        });
+          newMessages[currentChatId].push(botMessage);
+          setMessages({ ...newMessages });
 
+          setResponseCount((prevCount) => {
+            const newCount = prevCount + 1;
+            if (newCount === 5) {
+              setShowPopup(true);
+            }
+            return newCount;
+          });
+        } else {
+          throw new Error(`Error from server: ${responseData.message}`);
+        }
       } catch (error) {
-        console.error("Error sending message:", error);
-        // alert("오류가 발생하였습니다. 다시 시도해주세요.")
+        console.error('Error sending message:', error);
       }
     }
   };

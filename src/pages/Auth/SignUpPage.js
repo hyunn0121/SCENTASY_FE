@@ -170,7 +170,8 @@ const SignUpPage = () => {
         password,
       });
 
-      const { code, message, result } = response.data;
+      const { message, code, data  } = response.data;
+
       console.log(response);
 
       // 이메일을 extraInfo에 저장
@@ -179,20 +180,18 @@ const SignUpPage = () => {
         email: email,  // 이메일 저장
       }));
 
-      alert('회원가입이 완료되었습니다.');
-      navigate('/addInfo');
-
-      /*
       if (code === "0000") {
         alert('회원가입이 완료되었습니다.');
         navigate('/addInfo');
       } else if (code === "4201") {
         alert("중복된 이메일입니다. 다른 이메일로 다시 시도해주세요.")
         // alert(`회원가입 실패: ${message} (코드: ${code})`);
+      } else if (code === "4100") {
+        console.log("파라미터 누락")
       } else {
         alert("회원가입에 실패했습니다. 다시 시도해주세요.")
         alert(`회원가입 실패: ${message} (코드: ${code})`);
-      } */
+      }
     } catch (error) {
       console.error("회원가입 중 오류 발생: ", error);
       alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');

@@ -174,10 +174,8 @@ const LikeScentPage = () => {
 
     const englishNames = selectedImages.map(label => labelToEnglishMap[label]);
 
-    setExtraInfo((prevInfo) => ({
-      ...prevInfo,
-      likedScents: englishNames,
-    }));
+    localStorage.setItem('likedScents', JSON.stringify(englishNames));
+    
     navigate('/unlikeScent');
   };
 

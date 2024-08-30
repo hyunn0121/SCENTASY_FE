@@ -167,6 +167,7 @@ const UnlikeScentPage = () => {
   const { extraInfo, setExtraInfo } = useContext(ExtraInfoContext);
   const [selectedImages, setSelectedImages] = useState(extraInfo.dislikedScents || []);
 
+  const likedScents = JSON.parse(localStorage.getItem('likedScents'));
   const englishNames = selectedImages.map(label => labelToEnglishMap[label]);
 
   const handleComplete = async () => {
@@ -182,41 +183,34 @@ const UnlikeScentPage = () => {
     }));
 
     // 로그를 추가하여 선택한 값들을 확인
-    console.log("닉네임:", extraInfo.nickname);
-    console.log("성별:", extraInfo.gender);
-    console.log("연령대:", extraInfo.age);
-    console.log("선호하는 계절:", extraInfo.season);
-    console.log("좋아하는 향:", extraInfo.likedScents);
+    console.log("닉네임:", localStorage.getItem('tempNickname'));
+    console.log("성별:", localStorage.getItem('gender'));
+    console.log("연령대:", localStorage.getItem('age'));
+    console.log("선호하는 계절:", localStorage.getItem('season'));
+    console.log("좋아하는 향:", likedScents);
     console.log("싫어하는 향:", englishNames);
 
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_KEY}/auth/extra-info?email=${extraInfo.email}`,
         {
-          nickname: extraInfo.nickname,
-          gender: extraInfo.gender,
-          age: extraInfo.age,
-          season: extraInfo.season,
-          likedScents: extraInfo.likedScents,
+          nickname: localStorage.getItem('tempNickname'),
+          gender: localStorage.getItem('gender'), 
+          age: localStorage.getItem('age'),
+          season: localStorage.getItem('season'),
+          likedScents: likedScents,
           dislikedScents: englishNames,
         }
       );
 
       const { code, message, result } = response.data;
 
-      alert('추가정보 입력이 완료되었습니다.');
-      navigate('/about');
-
-      /*
       if (code === "0000") {
         alert('추가정보 입력이 완료되었습니다.');
-        navigate('/chat');
-      } else if (code === "4100") {
-        alert(`중복된 이메일입니다. 다른 이메일로 다시 시도해주세요: ${message} (코드: ${code})`);
-        // alert(`회원가입 실패: ${message} (코드: ${code})`);
+        navigate('/login');
       } else {
         alert("추가정보 입력에 실패했습니다. 다시 시도해주세요.")
-      } */
+      }
     } catch (error) {
       console.error("추가정보 입력 중 오류 발생: ", error);
       alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
