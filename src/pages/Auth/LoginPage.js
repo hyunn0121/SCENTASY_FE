@@ -1,8 +1,9 @@
 import React from "react";
 import styled from "styled-components";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
+import { ExtraInfoContext } from "../../contexts/ExtraInfoContext";
 
 const TitleContainer = styled.div`
   margin-bottom: 52px;
@@ -57,7 +58,9 @@ const GuideText = styled.p`
 `;
 
 const LoginPage = () => {
-  const navigate = useNavigate(); // useNavigate 훅을 사용하여 navigate 함수를 가져옵니다
+  const navigate = useNavigate();
+  const { extraInfo, setExtraInfo } = useContext(ExtraInfoContext)
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -113,43 +116,55 @@ const LoginPage = () => {
     }
 
     try {
+      // 현재 로그인 상태 확인
+      const accessToken = localStorage.getItem('accessToken');
+      if (accessToken) {
+        alert("이미 로그인되어 있습니다.");
+        navigate('/about');
+        return;
+      }
+
       const response = await axios.post(`${process.env.REACT_APP_API_KEY}/auth/login`, {
         email,
         password,
       });
 
-      // const { code, message, data } = response.data;
-      console.log(response);
+      console.log("API Response: ", response);
 
+      const { code, message, data } = response.data;
 
-      const { accessToken, refreshToken } = response.data;
+      console.log(`Response Code: ${code}, Message: ${message}`); // 로그 추가
 
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
+      if (code === "0000") {
+        if (data) {
+          const { accessToken, refreshToken, nickname, memberId } = data;
 
-      alert("로그인 되었습니다."); // 성공 메시지 알림
-      navigate('/about');
+          localStorage.setItem('accessToken', accessToken);
+          localStorage.setItem('refreshToken', refreshToken);
 
-      /*
-      if (code === "200") {
-        const { accessToken, refreshToken } = result;
-  
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
-  
-        alert("로그인 되었습니다."); // 성공 메시지 알림
-        navigate('/about');
+          console.log("Nickname to be stored:", nickname);
+          console.log("memberId to be stored:", memberId);
+
+          alert("로그인 되었습니다."); // 성공 메시지 알림
+          localStorage.setItem('nickname', nickname);
+          localStorage.setItem('memberId', memberId)
+
+          navigate('/about');
+
+        } else {
+          alert("로그인 응답 데이터가 올바르지 않습니다.");
+        }
       } else if (code === "4300") {
-        alert("비밀번호를 확인해주세요.")
-        // alert(`로그인 실패: ${message} (코드: ${code})`);
+        alert("비밀번호를 확인해주세요.");
       } else {
-        alert("로그인에 실패했습니다. 다시 시도해주세요.")
-      } */
+        alert("로그인에 실패했습니다. 다시 시도해주세요.");
+      }
     } catch (error) {
-      console.error("로그인 중 오류 발생: ", error);
+      console.error("로그인 중 오류 발생: ", error.response ? error.response.data : error.message);
       alert("로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.");
     }
   };
+
 
   const handleSignUpClick = () => {
     navigate('/signup'); // /signup 경로로 이동합니다
