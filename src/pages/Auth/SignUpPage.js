@@ -104,8 +104,8 @@ const Input = styled.input`
   box-sizing: border-box;
 
     &::placeholder {
-    color: #828282;  // placeholder 텍스트 색상 지정
-    font-size: 20px;  // placeholder 텍스트 크기 지정
+    color: #828282;
+    font-size: 20px;
   }
 `;
 
@@ -140,8 +140,8 @@ const SocialButtonContainer = styled.div`
 `;
 
 const SocialButton = styled.img`
-  width: 200px; /* 버튼의 너비를 설정 */
-  height: 100px; /* 버튼의 높이를 설정 */
+  width: 200px;
+  height: 100px;
   object-fit: contain; /* 이미지 비율 유지 */
 `;
 
@@ -196,7 +196,6 @@ const SignUpPage = () => {
       console.error("회원가입 중 오류 발생: ", error);
       alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
     
-      // 오류 세부 정보를 출력
       if (error.response) {
         console.error("응답 데이터:", error.response.data);
         console.error("응답 상태:", error.response.status);
@@ -249,7 +248,7 @@ const SignUpPage = () => {
     const value = e.target.value;
     setPassword(value);
     validatePassword(value);
-    validateConfirmPassword(confirmPassword, value); // 비밀번호 확인 검증 호출
+    validateConfirmPassword(confirmPassword, value);
   };
 
   const validateConfirmPassword = (confirmValue, passValue) => {

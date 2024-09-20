@@ -56,7 +56,7 @@ const Input = styled.input`
   border-radius: 8px;
   font-size: 20px;
   box-sizing: border-box;
-  margin-right: 10px; /* 버튼과의 간격을 위해 margin-right 설정 */
+  margin-right: 10px;
 `;
 
 const Select = styled.select`
@@ -151,8 +151,8 @@ const AddInfoPage = () => {
 
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_KEY}/auth/exists/${nickname}`);
-      console.log(response); // 응답 구조 확인
-      const { code, result } = response.data; // 응답 데이터에서 code와 result 추출
+      console.log(response);
+      const { code, result } = response.data;
 
       if (code === "0000") {
           if (result) {
@@ -193,7 +193,7 @@ const AddInfoPage = () => {
 
   return (
     <MainContainer>
-      <Title><Scentasy>Scentazy</Scentasy>에 오신 것을 환영해요!</Title>
+      <Title><Scentasy>Scentasy</Scentasy>에 오신 것을 환영해요!</Title>
       <FormContainer>
         <Label>닉네임 *</Label>
         <InfoContainer>
