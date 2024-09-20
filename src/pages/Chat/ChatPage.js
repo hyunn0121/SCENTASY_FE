@@ -1,26 +1,29 @@
 import React, { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import LoadingModal from './LoadingModal';
+import RatingModal from './RatingModal';
 
 import ic_addChat from '../../assets/images/ic_addChat.png';
 import ic_Search from '../../assets/images/ic_search.png';
 import user from '../../assets/images/user.png';
 import chatbot from '../../assets/images/chatbot.png';
 
-
 const ChatContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: 90vh;
+  height: 85vh;
+  position: relative;
 `;
 
 const ChatBody = styled.div`
   display: flex;
   flex: 1;
+  overflow: hidden; /* 전체 영역에서 스크롤을 방지 */
 `;
 
 const Sidebar = styled.div`
-  width: 300px;
+  width: 280px;
   background-color: #EEF1F6;
   padding: 20px;
   overflow-y: auto;
@@ -31,24 +34,24 @@ const Sidebar = styled.div`
 
 const ChatArea = styled.div`
   flex: 1;
-  padding: 50px;
-  background-color: #ffffff;
   display: flex;
   flex-direction: column;
+  background-color: #ffffff;
   position: relative;
 `;
 
 const MessageList = styled.div`
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto; /* 메시지 리스트만 스크롤 가능하게 설정 */
   padding: 20px;
   font-family: "Pretendard-ExtraLight";
+  margin-bottom: 70px;
 `;
 
 const Message = styled.div`
   display: flex;
   margin-bottom: 20px;
-  justify-content: ${props => (props.isUser ? 'flex-end' : 'flex-start')}; // 사용자 메시지는 오른쪽, 챗봇 메시지는 왼쪽
+  justify-content: ${props => (props.isUser ? 'flex-end' : 'flex-start')}; // 사용자 -> 오른쪽, 챗봇 -> 왼쪽
 `;
 
 const ProfileImage = styled.img`
@@ -59,22 +62,23 @@ const ProfileImage = styled.img`
 `;
 
 const MessageWrapper = styled.div`
+  max-width: 50%;
   display: flex;
   flex-direction: column;
   align-items: ${props => (props.isUser ? 'flex-end' : 'flex-start')}; // 사용자 메시지와 챗봇 메시지의 텍스트 정렬 조정
 `;
 
 const MessageContent = styled.div`
-  max-width: 40%;  /* 메시지 박스의 최대 너비를 제한 */
+
   padding: 20px 30px;
   border-radius: 10px;
+  text-align: left;
   background-color: ${props => (props.isUser ? '#ffe0b2' : '#e0e0e0')};
-  word-wrap: break-word; /* 긴 단어나 URL이 박스를 넘지 않도록 줄바꿈 */
+  // word-wrap: break-word; /* 긴 단어나 URL이 박스를 넘지 않도록 줄바꿈 */
   font-family: "Pretendard-Regular";
-  display: inline-block; /* 메시지 박스가 텍스트 크기에 맞게 줄어들도록 함 */
-  white-space: normal; /* 짧은 텍스트는 한 줄로 표시되도록 설정 */
-  word-break: keep-all; /* 단어를 가능한 한 통째로 유지하여 줄바꿈 */
-  overflow-wrap: break-word; /* 너무 긴 단어가 있을 경우 줄바꿈 */
+  // display: inline-block; /* 메시지 박스가 텍스트 크기에 맞게 줄어들도록 함 */
+  // white-space: pre-wrap; /* 긴 텍스트가 박스 내에서 줄바꿈이 되도록 설정 */
+  // overflow-wrap: break-word; /* 너무 긴 단어가 있을 경우 줄바꿈 */
 `;
 
 const TimeStamp = styled.div`
@@ -85,18 +89,18 @@ const TimeStamp = styled.div`
 `;
 
 const InputArea = styled.div`
-  width: 80%;
-  height: 50px;
+  width: 100%; /* ChatArea의 너비에 맞게 */
+  padding: 10px;
+  position: absolute;
+  bottom: 0; /* ChatArea의 하단에 고정 */
+  left: 0;
   display: flex;
   align-items: center;
-  padding: 10px;
-  margin: 10px 150px 50px 150px;
-  gap: 10px;
-  position: relative;
+  justify-content: center;
 `;
 
 const Input = styled.textarea`
-  width: 80%;
+  width: 60%;
   padding: 10px;
   border: 2px solid #E0E0E0;
   border-radius: 5px;
@@ -123,13 +127,14 @@ const Button = styled.button`
   height: 60px;
   border: none;
   border-radius: 5px;
-  background-color: ${props => (props.disabled ? '##E0E0E0' : '#00656D')};
+  background-color: ${props => (props.disabled ? '#E0E0E0' : '#00656D')};
   color: #ffffff;
   cursor: pointer;
   flex-shrink: 0;
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-left: 20px;
   ${({ disabled }) => disabled && `
     background-color: #ddd;
     cursor: not-allowed;
@@ -162,7 +167,7 @@ const ChatItemText = styled.div`
 const SearchBar = styled.div`
   display: flex;
   align-items: center;
-  width: 250px; /* 폭을 조정하여 텍스트 필드와 아이콘의 레이아웃을 맞춤 */
+  width: 250px;
   height: 50px;
   margin-bottom: 35px;
   border: 1px solid #ddd;
@@ -170,7 +175,8 @@ const SearchBar = styled.div`
   background-color: #FFFFFF;
   padding: 0 10px;
   box-sizing: border-box;
-  margin-right: 30px;
+  margin-left: 10px;
+  margin-right: 10px;
 `;
 
 const SearchIcon = styled.img`
@@ -218,14 +224,15 @@ const NewChatButton = styled.button`
 
 const Popup = styled.div`
   position: absolute;
-  bottom: 180px; /* InputArea 바로 위에 배치되도록 설정 */
+  bottom: 60px; /* InputArea 바로 위에 배치되도록 설정 */
+  transform: translateX(-50%);
   left: 50%;
-  transform: translateX(-50%); /* 수평 가운데 정렬 */
   width: 300px;
   padding: 20px;
   z-index: 1000;
   text-align: center;
   display: flex;
+  justify-content: flex-end;
   justify-content: space-between; /* 두 버튼 사이에 최대한의 공간을 부여 */
   border: none;
 `;
@@ -250,42 +257,42 @@ const PopupButton = styled.button`
   }
 `;
 
-
 const ChattingPage = () => {
   const [messages, setMessages] = useState({});
   const [input, setInput] = useState('');
   const [selectedChat, setSelectedChat] = useState(null);
   const [chatList, setChatList] = useState([]);
-  const [responseCount, setResponseCount] = useState(0); // 응답 카운터
-  const [showPopup, setShowPopup] = useState(false); // 팝업 표시 상태
-  const [popupPersistent, setPopupPersistent] = useState(true); // 팝업 지속 상태
-  const [isInputDisabled, setIsInputDisabled] = useState(false); // 입력 비활성화 상태
+  const [responseCount, setResponseCount] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupPersistent, setPopupPersistent] = useState(true);
+  const [isInputDisabled, setIsInputDisabled] = useState(false);
   const [isLoadingModalVisible, setIsLoadingModalVisible] = useState(false);
+  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+
+  const messageEndRef = useRef(null);
+
+  useEffect(() => {
+    if (messageEndRef.current) {
+      messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   const handleSendMessage = async () => {
     if (input.trim()) {
-
-      // 사용자(나) 메시지 생성
       const newMessage = {
         text: input,
         isUser: true,
         time: new Date().toLocaleTimeString()
       };
   
-      // 현재 선택된 채팅 ID
       let currentChatId = selectedChat;
-
-      // const newChatList = [...chatList];
   
       if (currentChatId === null) {
         currentChatId = chatList.length;
         setChatList([...chatList, { id: currentChatId, name: `Chat ${currentChatId + 1}` }]);
-
-        // 새로운 채팅방 생성 후 해당 채팅방을 자동으로 선택
         setSelectedChat(currentChatId);
       }
   
-      // 메시지를 채팅 리스트에 추가
       const newMessages = { ...messages };
       newMessages[currentChatId] = newMessages[currentChatId]
         ? [...newMessages[currentChatId], newMessage]
@@ -294,17 +301,11 @@ const ChattingPage = () => {
       setMessages(newMessages);
       setInput('');
 
-      /*
-      console.log(`Setting showPopup to true`);
-      setShowPopup(true); // 팝업 표시
-      */
-  
       try {
 
-        // localStorage에서 토큰 가져오기
         const accessToken = localStorage.getItem('accessToken');
         const memberId = localStorage.getItem('memberId');
-        
+
         if (!accessToken) {
           throw new Error('No access token found');
         }
@@ -315,7 +316,6 @@ const ChattingPage = () => {
 
         const url = `${process.env.REACT_APP_API_KEY}/api/chats/${memberId}`;
 
-        // 서버에 메시지 전송
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -332,49 +332,63 @@ const ChattingPage = () => {
           throw new Error(`Network response was not ok. Status: ${response.status}, Text: ${errorText}`);
         }
 
-        // 응답을 JSON으로 파싱
         const responseData = await response.json();
 
         // 응답에서 code와 data를 추출
         const { code, data } = responseData;
+        const BotResponse  = data.response;
 
         // code가 성공 상태인 경우에만 처리
         if (code === "0000") {
-          const botMessage = {
-            text: data.response,
-            isUser: false,
-            time: new Date().toLocaleTimeString(),
-          };
-
-          newMessages[currentChatId].push(botMessage);
-          setMessages({ ...newMessages });
-
-          setResponseCount((prevCount) => {
-            const newCount = prevCount + 1;
-            if (newCount >= 5 && popupPersistent) {
-              setShowPopup(true);
-              setIsInputDisabled(true);
-            }
-            return newCount;
-          });
+          setTimeout(() => {
+            const botMessage = {
+              text: data.response,
+              isUser: false,
+              time: new Date().toLocaleTimeString(),
+            };
+  
+            newMessages[currentChatId].push(botMessage);
+            setMessages({ ...newMessages });
+  
+            setResponseCount((prevCount) => {
+              const newCount = prevCount + 1;
+              if (newCount >= 2) {
+                setShowPopup(true);
+              }
+              return newCount;
+            });
+          }, 3000);
         } else {
           throw new Error(`Error from server: ${responseData.message}`);
         }
+
       } catch (error) {
         console.error('Error sending message:', error);
       }
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // 기본 엔터키로 줄바꿈 방지
-      handleSendMessage(); // 메시지 전송
-    }
+
+  const handleLoadingModal = () => {
+    setShowPopup(false);
+    setPopupPersistent(false);
+    setIsInputDisabled(true);
+    setIsLoadingModalVisible(true);
+
+    setTimeout(() => {
+      setIsLoadingModalVisible(false);
+      setIsRatingModalVisible(true);
+    }, 30000);
   };
 
-  const handleChatItemClick = (index) => {
-    setSelectedChat(index);
+  // 상태 변경 추적을 위한 useEffect
+useEffect(() => {
+  console.log('isLoadingModalVisible changed:', isLoadingModalVisible);
+}, [isLoadingModalVisible]);
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+    setIsInputDisabled(false);
   };
 
   const handleNewChat = () => {
@@ -383,21 +397,21 @@ const ChattingPage = () => {
     setSelectedChat(newChat.id);
   };
 
-  const handleClosePopup = () => {
-    setShowPopup(false);
-    setIsInputDisabled(false); // 채팅 계속하기를 클릭하면 입력 활성화됨
-    // setResponseCount(0); // 팝업을 닫으면서 응답 카운트 초기화
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
-  const handlePerfumeCreation = () => {
-    setPopupPersistent(false); // 향수 만들기 버튼을 눌렀을 때 더이상 팝업 뜨지 X
-    setShowPopup(false); // 팝업 숨김
-    setIsLoadingModalVisible(true);
+  const handleChatItemClick = (index) => {
+    setSelectedChat(index);
+  };
 
-    setTimeout(() => {
-      setIsLoadingModalVisible(false);
-    }, 30000); // 30초 = 30000ms
-  }
+  const handleCloseRatingModal = () => {
+    setIsRatingModalVisible(false); // RatingModal 닫기 함수 추가
+    alert("향수 평가가 완료되었습니다!\n해당 평가는 다음 향수 제작에 활용됩니다.")
+  };
 
   return (
     <ChatContainer>
@@ -429,18 +443,29 @@ const ChattingPage = () => {
                 {msg.isUser && <ProfileImage src={user} alt="User Profile" isUser />}
               </Message>
             ))}
+            <div ref={messageEndRef} /> {/* 이 부분을 추가하여 자동 스크롤이 되도록 설정 */}
           </MessageList>
           {showPopup && (
             <Popup>
-                <PopupButton onClick={handlePerfumeCreation}>향수 만들기</PopupButton>
-                <PopupButton onClick={handleClosePopup}>채팅 계속 하기</PopupButton>
-              </Popup>
+              {popupPersistent ? (
+                <>
+                  <PopupButton onClick={handleLoadingModal}>향수 레시피 생성하기</PopupButton> {/* 향수 레시피 생성 api로 수정*/}
+                  <PopupButton onClick={handleClosePopup}>채팅 계속 하기</PopupButton>
+                </>
+              ) : (
+                <>
+                  <PopupButton onClick={handleLoadingModal}>향수 만들기</PopupButton>
+                  <PopupButton onClick={handleClosePopup}>다시 만들기</PopupButton>
+                </>
+              )}
+            </Popup>
           )}
+          
           <InputArea>
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown} // Enter 키 눌림 감지
+              onKeyDown={handleKeyDown}
               placeholder="Write your message"
               disabled={isInputDisabled}
             />
@@ -449,11 +474,11 @@ const ChattingPage = () => {
         </ChatArea>
       </ChatBody>
 
-      {/* LoadingModal 렌더링 */}
       <LoadingModal 
         isVisible={isLoadingModalVisible} 
         onClose={() => setIsLoadingModalVisible(false)} 
       />
+      {isRatingModalVisible && <RatingModal onClose={handleCloseRatingModal} />} {/* RatingModal 렌더링 */}
     </ChatContainer>
   );
 };
