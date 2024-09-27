@@ -44,6 +44,42 @@
   src: url("./assets/font/Pretendard-SemiBold.woff") format("woff");
 }
 
+@font-face {
+  font-family: "Montserrat-Thin";
+  font-display: swap;
+  src: url("./assets/font/Montserrat-Thin.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Montserrat-Regular";
+  font-display: swap;
+  src: url("./assets/font/Montserrat-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Montserrat-Bold";
+  font-display: swap;
+  src: url("./assets/font/Montserrat-Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "NanumMyeongjo";
+  font-display: swap;
+  src: url("./assets/font/NanumMyeongjo.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "NanumMyeongjo-Bold";
+  font-display: swap;
+  src: url("./assets/font/NanumMyeongjoBold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "NanumMyeongjo-ExtraBold";
+  font-display: swap;
+  src: url("./assets/font/NanumMyeongjoExtraBold.ttf") format("truetype");
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
