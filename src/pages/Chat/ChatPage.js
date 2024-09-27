@@ -14,6 +14,7 @@ const ChatContainer = styled.div`
   flex-direction: column;
   height: 85vh;
   position: relative;
+  background-color: #FBF8EB;
 `;
 
 const ChatBody = styled.div`
@@ -23,20 +24,23 @@ const ChatBody = styled.div`
 `;
 
 const Sidebar = styled.div`
-  width: 280px;
-  background-color: #EEF1F6;
+  width: 250px;
+  background-color: #ffffff;
   padding: 20px;
   overflow-y: auto;
   font-family: "Pretendard-ExtraLight";
   position: relative;
-  border-radius: 30px;
+  border-radius: 0px 30px 0px 0px;
+  border: 1px solid #ddd;
 `;
 
 const ChatArea = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
+  padding: 20px 20px 0px 0px;
+  background-color: #FBF8EB;
+  
   position: relative;
 `;
 
@@ -69,7 +73,6 @@ const MessageWrapper = styled.div`
 `;
 
 const MessageContent = styled.div`
-
   padding: 20px 30px;
   border-radius: 10px;
   text-align: left;
@@ -92,7 +95,7 @@ const InputArea = styled.div`
   width: 100%; /* ChatArea의 너비에 맞게 */
   padding: 10px;
   position: absolute;
-  bottom: 0; /* ChatArea의 하단에 고정 */
+  bottom: 10px; /* ChatArea의 하단에 고정 */
   left: 0;
   display: flex;
   align-items: center;
@@ -101,9 +104,9 @@ const InputArea = styled.div`
 
 const Input = styled.textarea`
   width: 60%;
-  padding: 10px;
+  padding: 20px;
   border: 2px solid #E0E0E0;
-  border-radius: 5px;
+  border-radius: 20px;
   max-height: 400px;
   resize: none;
   overflow-y: auto;
@@ -152,7 +155,9 @@ const ChatItem = styled.div`
   margin-top: 10px;
   margin-bottom: 10px;
   cursor: pointer;
-  background-color: ${props => (props.isSelected ? '#E1EBF7' : 'transparent')};
+  color: #000000;
+  border-radius: 10px;
+  background-color: ${props => (props.isSelected ? '#E1EBF7' : '#ffffff')};
   &:hover {
     background-color: #E1EBF7;
     border-radius: 10px;
@@ -169,7 +174,6 @@ const SearchBar = styled.div`
   align-items: center;
   width: 250px;
   height: 50px;
-  margin-bottom: 35px;
   border: 1px solid #ddd;
   border-radius: 15px;
   background-color: #FFFFFF;
@@ -203,15 +207,16 @@ const SearchText = styled.input`
 
 const NewChatButtonContainer = styled.div`
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  margin-bottom: 10px;
+  margin-bottom: 30px;
 `;
 
 const NewChatButton = styled.button`
   width: 50px;
-  height: 50px;
-  padding: 14px;
-  border: none;
+  height: 30px;
+  padding: 20px 14px;
+  border: 1px solid #ddd;
   border-radius: 15px;
   background-color: #FFFFFF;
   cursor: pointer;

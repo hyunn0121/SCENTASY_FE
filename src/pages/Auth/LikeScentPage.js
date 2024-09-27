@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import aldehydeC18 from '../../assets/images/Flavors/Aldehyde C18.jpg';
@@ -165,6 +165,10 @@ const LikeScentPage = () => {
 
   const { extraInfo, setExtraInfo } = useContext(ExtraInfoContext);
   const [selectedImages, setSelectedImages] = useState(extraInfo.likedScents || []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0); // 페이지가 로드될 때 스크롤을 맨 위로 이동
+  }, []);
 
   const handleNextClick = () => {
     if (selectedImages.length !== 5) {
