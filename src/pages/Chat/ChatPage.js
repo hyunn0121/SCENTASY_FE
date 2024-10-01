@@ -49,7 +49,7 @@ const MessageList = styled.div`
   overflow-y: auto; /* 메시지 리스트만 스크롤 가능하게 설정 */
   padding: 20px;
   font-family: "Pretendard-ExtraLight";
-  margin-bottom: 70px;
+  margin-bottom: 120px;
 `;
 
 const Message = styled.div`
@@ -93,7 +93,7 @@ const TimeStamp = styled.div`
 
 const InputArea = styled.div`
   width: 100%; /* ChatArea의 너비에 맞게 */
-  padding: 10px;
+  padding: 20px;
   position: absolute;
   bottom: 10px; /* ChatArea의 하단에 고정 */
   left: 0;
@@ -107,7 +107,7 @@ const Input = styled.textarea`
   padding: 20px;
   border: 2px solid #E0E0E0;
   border-radius: 20px;
-  max-height: 400px;
+  max-height: 200px;
   resize: none;
   overflow-y: auto;
   background-color: #ffffff;
@@ -171,6 +171,7 @@ const ChatItemText = styled.div`
 
 const SearchBar = styled.div`
   display: flex;
+  justify-content: center;
   align-items: center;
   width: 250px;
   height: 50px;
@@ -186,7 +187,7 @@ const SearchBar = styled.div`
 const SearchIcon = styled.img`
   width: 24px; /* 아이콘 크기 조정 */
   height: 24px; /* 아이콘 크기 조정 */
-  margin-right: 8px; /* 아이콘과 텍스트 필드 사이의 간격 조정 */
+  margin-right: 0px; /* 아이콘과 텍스트 필드 사이의 간격 조정 */
 `;
 
 const SearchText = styled.input`
@@ -229,7 +230,7 @@ const NewChatButton = styled.button`
 
 const Popup = styled.div`
   position: absolute;
-  bottom: 60px; /* InputArea 바로 위에 배치되도록 설정 */
+  bottom: 100px; /* InputArea 바로 위에 배치되도록 설정 */
   transform: translateX(-50%);
   left: 50%;
   width: 300px;

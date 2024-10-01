@@ -9,7 +9,6 @@ import { ko } from 'date-fns/locale';
 
 import backgroundImage2 from '../../assets/images/img_onboarding2.png';
 import example_profile from '../../assets/images/example_profile.jpg';
-import ic_arrow from '../../assets/images/ic_calendar_arrow.png';
 import arc_text from '../../assets/images/calendar_arc_text.png';
 import ic_memo_submit from '../../assets/images/ic_memo_submit.png';
 import left_arrow from '../../assets/images/ic_calendar_left_arrow.png';
@@ -182,15 +181,6 @@ const CalendarArrowIcon = styled.img`
   height: 18px;
   cursor: pointer;
   margin: 0px 35px;
-`;
-
-const ArrowIcon = styled.img`
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-left: 50px;
-  margin-right: 50px;
 `;
 
 const CardContainer = styled.div`
@@ -400,7 +390,7 @@ const PerfumeDetailButton = styled.button`
 const CalendarPage = () => {
 
   const [currentYear, setCurrentYear] = useState(2024); // 초기 연도
-  const [currentMonth, setCurrentMonth] = useState(7);  // 초기 월 (0부터 시작, 7은 8월)
+  const [currentMonth, setCurrentMonth] = useState(8);  // 초기 월 (0부터 시작, 7은 8월)
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -516,9 +506,9 @@ const CalendarPage = () => {
         <MainContentContainer>
           <CalendarContainer>
           <CalendarTitle>
-            <CalendarArrowIcon src={left_arrow} onClick={handlePreviousMonth}/>
+            <CalendarArrowIcon src={left_arrow} onClick={handlePreviousMonth} />
             {currentYear}년 {currentMonth + 1}월
-            <CalendarArrowIcon src={right_arrow} />
+            <CalendarArrowIcon src={right_arrow} onClick={handleNextMonth} />
           </CalendarTitle>
           <CalendarGuide>날짜를 선택해주세요</CalendarGuide>
             <CalendarComponent year={currentYear} month={currentMonth} />
