@@ -173,6 +173,7 @@ const SignUpPage = () => {
       const { message, code, data  } = response.data;
 
       console.log(response);
+      console.log(response.data.code);
 
       // 이메일을 extraInfo에 저장
       setExtraInfo((prevInfo) => ({
