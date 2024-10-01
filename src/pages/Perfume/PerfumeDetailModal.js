@@ -21,6 +21,7 @@ const ModalOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
   height: calc(100vh - 40px); /* 상하 간격을 제외한 전체 높이 */
 `;
 
