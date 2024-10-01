@@ -29,7 +29,7 @@ const Header = () => {
                     <li><a href="/chat">Chat</a></li>
                     <li><a href="/calendar">Calendar</a></li>
                     <li><a href="#community">Community</a></li>
-                    <li><a href="#mypage">My Page</a></li>
+                    <li><a href="/mypage">My Page</a></li>
                 </ul>
             </nav>
             <div className="login">
