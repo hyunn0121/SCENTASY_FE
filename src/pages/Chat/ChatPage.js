@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import LoadingModal from './LoadingModal';
 import RatingModal from './RatingModal';
+import ChatbotTypingEffect from "./ChatbotTypingEffect";
 
 import ic_addChat from '../../assets/images/ic_addChat.png';
 import ic_Search from '../../assets/images/ic_search.png';
@@ -358,7 +359,7 @@ const ChattingPage = () => {
   
             setResponseCount((prevCount) => {
               const newCount = prevCount + 1;
-              if (newCount >= 2) {
+              if (newCount >= 5) {
                 setShowPopup(true);
               }
               return newCount;
@@ -443,7 +444,13 @@ useEffect(() => {
               <Message key={index} isUser={msg.isUser}>
                 {!msg.isUser && <ProfileImage src={chatbot} alt="Bot Profile" />}
                 <MessageWrapper isUser={msg.isUser}>
-                  <MessageContent isUser={msg.isUser}>{msg.text}</MessageContent>
+                  <MessageContent isUser={msg.isUser}>
+                    {msg.isUser ? (
+                      msg.text
+                    ) : (
+                      <ChatbotTypingEffect fullText={msg.text} speed={50} />
+                    )}
+                  </MessageContent>
                   <TimeStamp isUser={msg.isUser}>{msg.time}</TimeStamp>
                 </MessageWrapper>
                 {msg.isUser && <ProfileImage src={user} alt="User Profile" isUser />}
