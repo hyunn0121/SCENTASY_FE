@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import styled from "styled-components";
 import Calendar from "react-calendar";
@@ -389,8 +389,10 @@ const PerfumeDetailButton = styled.button`
 
 const CalendarPage = () => {
 
-  const [currentYear, setCurrentYear] = useState(2024); // 초기 연도
-  const [currentMonth, setCurrentMonth] = useState(8);  // 초기 월 (0부터 시작, 7은 8월)
+  const today = new Date();
+  const [currentYear, setCurrentYear] = useState(today.getFullYear()); // 초기 연도
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());  // 초기 월 (0부터 시작, 7은 8월)
+  const [selectedDate, setSelectedDate] = useState(null); // 선택된 날짜 상태 추가
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -429,11 +431,34 @@ const CalendarPage = () => {
     }
   };
 
+  const handleDateClick = (day) => {
+    if (selectedDate === day) {
+      setIsFlipped(false); // 같은 날짜 선택 -> 앞면
+      setSelectedDate(null); // 선택된 날짜 삭제
+    } else {
+      setSelectedDate(day); // 선택된 날짜 설정
+    }
+  };
+
+  useEffect(() => {
+    if (selectedDate) {
+      setIsFlipped(false); // 앞면으로 먼저 돌림
+      const flipTimeout = setTimeout(() => {
+        setIsFlipped(true);
+      }, 300);
+
+      return () => clearTimeout(flipTimeout);
+    }
+  }, [selectedDate]);
+
   const CalendarComponent = ({ year, month }) => {
     const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
     const daysInMonth = getDaysInMonth(year, month);
     const startDay = getStartDayOfMonth(year, month);
-    const [selectedDate, setSelectedDate] = React.useState(null);
+
+    const isToday = (day) => {
+      return year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
+    }
 
     const handleDateClick = (day) => {
       setSelectedDate(day);
@@ -454,7 +479,8 @@ const CalendarPage = () => {
         {days.map(day => (
           <DateTile
             key={day}
-            isSelected={selectedDate === day}
+            isSelected={selectedDate === day} // 선택된 날짜 스타일
+            isToday={isToday(day)} // 오늘 날짜인지 확인
             onClick={() => handleDateClick(day)}
           >
             {day}
