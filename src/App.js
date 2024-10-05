@@ -14,6 +14,7 @@ import UnlikeScentPage from './pages/Auth/UnlikeScentPage';
 import { ExtraInfoProvider } from './contexts/ExtraInfoContext';
 import CalendarPage from './pages/Calendar/CalendarPage';
 import Mypage from './pages/Mypage/Mypage';
+import CommunityPage from './pages/Community/CommunityPage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="/about" element={<MainPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/community" element={<CommunityPage />} />
             <Route path="/mypage" element={<Mypage/>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />
