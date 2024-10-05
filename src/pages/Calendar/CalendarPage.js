@@ -160,7 +160,9 @@ const DateTile = styled.div`
   font-size: 16px;
   cursor: pointer;
   border-radius: 50%;
-  background-color: ${props => (props.isSelected ? '#00656D' : 'transparent')};
+  background-color: ${props => 
+    props.isSelected ? '#00656D' :
+    props.hasPerfume ? '#E3F5F5' : 'transparent'};
   color: ${props => (props.isSelected ? '#ffffff' : ' #00656D;')};
 
   &:hover {
@@ -393,17 +395,61 @@ const CalendarPage = () => {
   const [currentYear, setCurrentYear] = useState(today.getFullYear()); // 초기 연도
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());  // 초기 월 (0부터 시작, 7은 8월)
   const [selectedDate, setSelectedDate] = useState(null); // 선택된 날짜 상태 추가
-
+  const [perfumeDates, setPerfumeDates] = useState([]);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
 
-  const badgeNumber = 15; // 서버 값으로 교체 필요
+  const badgeNumber = 25; // 서버 값으로 교체 필요
   const progressPercentage = (badgeNumber / 50) * 100;
   const samplePerfumes = [
     { title: "면접날의 향수", memoCount: 1 },
     { title: "신나는 생일", memoCount: 2 },
     { title: "떨리는 첫 데이트", memoCount: 0 },
   ];
+
+  useEffect(() => {
+    const fetchPerfumeData = async () => {
+      try {
+        const memberId = localStorage.getItem('memberId');
+        const accessToken = localStorage.getItem('accessToken');
+  
+        if (!memberId || !accessToken) {
+          console.error('로그인이 필요합니다.');
+          // 토큰이 없을 경우 로그인 페이지로 리다이렉트하거나 다시 로그인 유도
+          return;
+        }
+  
+        const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/perfume/list/${memberId}`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        });
+  
+        if (!response.ok) {
+          if (response.status === 401) {
+            console.error('인증 오류: 액세스 토큰이 만료되었거나 유효하지 않습니다.');
+            // 만료된 토큰 처리: 재로그인 로직 추가 가능
+          }
+          throw new Error(`Error: ${response.status}`);
+        }
+  
+      const data = await response.json();
+      if (data.code === '0000') {
+        const perfumeDates = data.data.map((perfume) => new Date(perfume.createdAt));
+        setPerfumeDates(perfumeDates);  // 날짜 목록 저장
+      } else {
+        console.error("Failed to fetch perfume data");
+      }
+      } catch (error) {
+        console.error("전체 향수 목록 오류:", error);
+      }
+    };
+  
+    fetchPerfumeData();
+  }, []);
 
   const getDaysInMonth = (year, month) => {
     return new Date(year, month + 1, 0).getDate();
@@ -456,6 +502,12 @@ const CalendarPage = () => {
     const daysInMonth = getDaysInMonth(year, month);
     const startDay = getStartDayOfMonth(year, month);
 
+    const hasPerfumeOnDate = (date) => {
+      return perfumeDates.some(perfumeDate => {
+        return perfumeDate.getFullYear() === year && perfumeDate.getMonth() === month && perfumeDate.getDate() === date;
+      });
+    };
+
     const isToday = (day) => {
       return year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
     }
@@ -481,6 +533,7 @@ const CalendarPage = () => {
             key={day}
             isSelected={selectedDate === day} // 선택된 날짜 스타일
             isToday={isToday(day)} // 오늘 날짜인지 확인
+            hasPerfume={hasPerfumeOnDate(day)} // 향수있는 날짜
             onClick={() => handleDateClick(day)}
           >
             {day}
