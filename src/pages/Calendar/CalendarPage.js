@@ -9,6 +9,7 @@ import { ko } from 'date-fns/locale';
 
 import backgroundImage2 from '../../assets/images/img_onboarding2.png';
 import example_profile from '../../assets/images/example_profile.jpg';
+import default_profile_img from '../../assets/images/default_profile_image.png';
 import arc_text from '../../assets/images/calendar_arc_text.png';
 import ic_memo_submit from '../../assets/images/ic_memo_submit.png';
 import left_arrow from '../../assets/images/ic_calendar_left_arrow.png';
@@ -314,6 +315,12 @@ const PerfumeItem = styled.div`
   font-family: "Pretendard-Regular";
   font-size: 14px;
 
+  /* 클릭된 상태에 따라 스타일 다르게 적용 */
+  background-color: ${(props) => (props.isSelected ? '#E3F5F5' : 'transparent')};
+  border-radius: ${(props) => (props.isSelected ? '10px' : '0')};
+  font-weight: ${(props) => (props.isSelected ? '700' : 'normal')};
+  color: ${(props) => (props.isSelected ? '#000000' : '#181818')};
+
   &:hover {
     background-color: #E3F5F5;
     border-radius: 10px;
@@ -321,6 +328,11 @@ const PerfumeItem = styled.div`
     font-weight: 700;
     color: #000000
   }
+`;
+
+const NoPerfumeItem = styled.p`
+  font-size: 14px;
+  font-family: "Pretendard-Regular";
 `;
 
 const ListDivider = styled.hr`
@@ -400,14 +412,94 @@ const CalendarPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
 
-  const badgeNumber = 25; // 서버 값으로 교체 필요
-  const progressPercentage = (badgeNumber / 50) * 100;
-  const samplePerfumes = [
-    { title: "면접날의 향수", memoCount: 1 },
-    { title: "신나는 생일", memoCount: 2 },
-    { title: "떨리는 첫 데이트", memoCount: 0 },
-  ];
+  const [userProfile, setUserProfile] = useState(default_profile_img); // User 프로필 이미지
+  const [perfumeCount, setPerfumeCount] = useState(0); // 전체 향수 개수
+  const [perfumeList, setPerfumeList] = useState([]); // 향수 목록
+  const [selectedPerfumes, setSelectedPerfumes] = useState([]);
+  const [selectedPerfumeId, setSelectedPerfumeId] = useState(null);
 
+  const [memoContent, setMemoContent] = useState("");
+
+  const handlePerfumeClick = (event, perfume) => {
+    event.stopPropagation();
+    setSelectedPerfumeId(perfume.id);
+  };
+  
+  const progressPercentage = (perfumeCount / 50) * 100;
+
+  // 전체 향수 목록 조회 디버깅용
+  useEffect(() => {
+    console.log('Perfume List:', perfumeList); // 로그로 perfumeList 데이터 확인
+    console.log('Selected Perfumes:', selectedPerfumes); // 로그로 selectedPerfumes 데이터 확인
+  }, [perfumeList, selectedPerfumes]);
+
+  // 사용자 프로필 이미지
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const memberId = localStorage.getItem('memberId');
+        const accessToken = localStorage.getItem('accessToken');
+
+        if (!memberId || !accessToken) {
+          console.error('로그인이 필요합니다.');
+          // 토큰이 없을 경우 로그인 페이지로 리다이렉트하거나 다시 로그인 유도
+          return;
+        }
+
+        const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/mypage/{memberId}`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        });
+
+        const data = await response.json();
+        if (data.code === '0000') {
+          setUserProfile(data.imageUrl || default_profile_img);
+        }
+      } catch (error) {
+
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  // 전체 향수 개수 조회
+  useEffect(() => {
+    const fetchPerfumeCount = async () => {
+      try {
+        const memberId = localStorage.getItem('memberId');
+        const accessToken = localStorage.getItem('accessToken');
+  
+        if (!memberId || !accessToken) {
+          console.error('로그인이 필요합니다.');
+          // 토큰이 없을 경우 로그인 페이지로 리다이렉트하거나 다시 로그인 유도
+          return;
+        }
+
+        const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/perfume/count`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        });
+
+        const data = await response.json();
+        if (data.code === '0000') {
+          setPerfumeCount(data.data);
+        }
+    } catch (error) {
+      console.error("전체 향수 목록 오류:", error);
+      }
+    };
+    
+    fetchPerfumeCount();
+  }, []);
+
+  // 전체 향수 목록 조회
   useEffect(() => {
     const fetchPerfumeData = async () => {
       try {
@@ -420,7 +512,7 @@ const CalendarPage = () => {
           return;
         }
   
-        const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/perfume/list/${memberId}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/perfume`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -438,8 +530,15 @@ const CalendarPage = () => {
   
       const data = await response.json();
       if (data.code === '0000') {
+        // 안전하게 memos 배열에 접근
+        const perfumeDataWithMemoCount = data.data.map(perfume => ({
+          ...perfume,
+          memoCount: perfume.memos ? perfume.memos.length : 0, // memos가 undefined일 때 0으로 처리
+        }));
+
         const perfumeDates = data.data.map((perfume) => new Date(perfume.createdAt));
         setPerfumeDates(perfumeDates);  // 날짜 목록 저장
+        setPerfumeList(perfumeDataWithMemoCount);
       } else {
         console.error("Failed to fetch perfume data");
       }
@@ -450,6 +549,40 @@ const CalendarPage = () => {
   
     fetchPerfumeData();
   }, []);
+
+  // 메모 작성
+  const handleMemoSubmit = async () => {
+    if (!memoContent || !selectedPerfumeId) {
+      alert('향수를 선택한 뒤 메모 내용을 입력하세요.');
+      return;
+    }
+
+    try {
+      const memberId = localStorage.getItem('memberId');
+      const accessToken = localStorage.getItem('accessToken');
+
+      console.log(`Submitting memo for perfume ID: ${selectedPerfumeId}`);
+
+      const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/memo/write/${memberId}/${selectedPerfumeId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: memoContent }),
+      });
+
+      if (response.ok) {
+        alert('메모가 성공적으로 저장되었습니다.');
+        setMemoContent(''); // 메모 제출 후 입력 필드 초기화
+      } else {
+        throw new Error('메모 저장에 실패했습니다. 다시 시도해주세요.');
+      }
+    } catch (error) {
+      console.error('메모 제출 중 오류 발생: ', error);
+      alert('메모 저장 중 오류가 발생했습니다.');
+    }
+  };
 
   const getDaysInMonth = (year, month) => {
     return new Date(year, month + 1, 0).getDate();
@@ -477,13 +610,27 @@ const CalendarPage = () => {
     }
   };
 
+  const isSameDate = (date1, date2) => {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  };
+
+
   const handleDateClick = (day) => {
-    if (selectedDate === day) {
-      setIsFlipped(false); // 같은 날짜 선택 -> 앞면
-      setSelectedDate(null); // 선택된 날짜 삭제
-    } else {
-      setSelectedDate(day); // 선택된 날짜 설정
-    }
+    setSelectedDate(day);
+
+    // 새로운 날짜 선택 -> 선택 향수 초기화
+    setSelectedPerfumeId(null);
+
+    const selectedPerfumesForDate = perfumeList.filter(perfume => {
+      const perfumeDate = new Date(perfume.createdAt);
+      return isSameDate(perfumeDate, new Date(currentYear, currentMonth, day))
+    });
+
+    setSelectedPerfumes(selectedPerfumesForDate);
   };
 
   useEffect(() => {
@@ -511,10 +658,6 @@ const CalendarPage = () => {
     const isToday = (day) => {
       return year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
     }
-
-    const handleDateClick = (day) => {
-      setSelectedDate(day);
-    };
 
     // Creating empty slots for days before the first day of the month
     const emptyDays = Array(startDay).fill(null);
@@ -555,9 +698,20 @@ const CalendarPage = () => {
     setIsFlipped(!isFlipped);
   };
 
-  // 이벤트 전파를 막기 위해 stopPropagation() 사용
+  // 향수 클릭 -> 선택 & 이벤트 전파 x => stopPropagation() 사용
     const handleClick = (event, perfume) => {
       event.stopPropagation();
+
+      // perfume 존재 x -> 작업 x
+      if (!perfume) return;
+
+      // 이미 선택한 항목 다시 클릭 -> 선택 해제
+      if (selectedPerfumeId === perfume.perfumeId) {
+        setSelectedPerfumeId(null);
+      } else {
+        setSelectedPerfumeId(perfume.perfumeId);
+        console.log(`선택된 향수: ${perfume.perfumeId}`);
+      }
   };
 
   const handleButtonClick = (event) => {
@@ -571,14 +725,14 @@ const CalendarPage = () => {
         <ProfileContainer>
           <CircleWrapper>
             <CircleBorder percentage={progressPercentage}>
-              <CircleImage src={example_profile}></CircleImage>
+              <CircleImage src={userProfile}></CircleImage>
             </CircleBorder>
-            <NumberBadge>{badgeNumber}</NumberBadge>
+            <NumberBadge>{perfumeCount}</NumberBadge>
           </CircleWrapper>
           <ProfileTextContainer>
             <ProfileTitle>My Perfume Calendar</ProfileTitle>
             <MyPerfumeCount>
-              나의 향수 기록 15개
+              나의 향수 기록 {perfumeCount}개
             </MyPerfumeCount>
           </ProfileTextContainer>
         </ProfileContainer>
@@ -608,25 +762,44 @@ const CalendarPage = () => {
               </CardFront>
 
               <CardBack>
-                <PerfumeListTitle>8월 14일의 향수</PerfumeListTitle>
+              <PerfumeListTitle>
+                {selectedDate ? `${currentMonth + 1}월 ${selectedDate}일의 향수` : '선택된 향수가 없습니다.'}
+              </PerfumeListTitle>
                 <PerfumeListGuide>향수를 선택하세요</PerfumeListGuide>
               
                 <PerfumeListContainer>
-                  {samplePerfumes.map((perfume, index) => (
-                    <React.Fragment key={index}>
-                      <PerfumeItem onClick={(event) => handleClick(event, perfume)}>
+                  {selectedPerfumes.length > 0 ? (
+                    selectedPerfumes.map((perfume, index) => (
+                      <React.Fragment key={index}>
+                      <PerfumeItem
+                        isSelected={selectedPerfumeId === perfume.perfumeId}
+                        onClick={(event) => handleClick(event, perfume)}>
                         <span>{perfume.title}</span>
-                        <MemoCount>메모 {perfume.memoCount}개</MemoCount>
+                        <MemoCount>메모 {perfume.memos ? perfume.memos.length : 0}개</MemoCount>
                       </PerfumeItem>
                       {/* 마지막 항목 뒤에는 Divider를 추가하지 않음 */}
-                      {index < samplePerfumes.length - 1 && <ListDivider />}
+                      {index < selectedPerfumes.length - 1 && <ListDivider />}
                     </React.Fragment>
-                  ))}
+                    ))
+                  ) : (
+                    <NoPerfumeItem>앗! 이 날에는 제작된 향수가 없습니다.<br/>오늘 향수를 만들어보시는 건 어떠신가요?</NoPerfumeItem>
+                  )}
                 </PerfumeListContainer>
 
-                <PerfumeMemoContainer onClick={handleClick}>
-                  <PerfumeMemoInput placeholder="메모나 일기를 작성해주세요." />
-                  <MemoSubmitButton src={ic_memo_submit}></MemoSubmitButton>
+                <PerfumeMemoContainer onClick={(e) => e.stopPropagation}>
+                  <PerfumeMemoInput
+                  placeholder="메모나 일기를 작성해주세요."
+                  onClick={(e) => e.stopPropagation()}
+                  value={memoContent}
+                  onChange={(e) => setMemoContent(e.target.value)}
+                  />
+                  <MemoSubmitButton
+                    src={ic_memo_submit}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMemoSubmit(); // 메모 제출
+                      }}
+                  />
                 </PerfumeMemoContainer>
                 <PerfumeDetailButton onClick={handleButtonClick}>자세히 보기</PerfumeDetailButton>
               </CardBack>
