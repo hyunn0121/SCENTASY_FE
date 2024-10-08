@@ -419,6 +419,7 @@ const CalendarPage = () => {
   const [selectedPerfumeId, setSelectedPerfumeId] = useState(null);
 
   const [memoContent, setMemoContent] = useState("");
+  const [selectedPerfumeDetail, setSelectedPerfumeDetail] = useState({});
 
   const handlePerfumeClick = (event, perfume) => {
     event.stopPropagation();
@@ -714,9 +715,37 @@ const CalendarPage = () => {
       }
   };
 
-  const handleButtonClick = (event) => {
+  const handleButtonClick = async (event) => {
     event.stopPropagation(); // 이벤트 전파를 막아 카드가 뒤집히지 않게 합니다.
-    handleOpenModal(); // 모달을 엽니다.
+    
+    if (!selectedPerfumeId) {
+      console.error('향수를 먼저 선택해주세요.');
+      return;
+    }
+
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/perfume/${selectedPerfumeId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      if (data.code === '0000') {
+        setSelectedPerfumeDetail(data.data); // 향수 상세정보
+        setIsModalOpen(true);
+      } else {
+        console.error('향수 상세 정보를 불러오는데 실패했습니다.');
+        alert("향수 상세 정보를 불러오는데 실패했습니다.");
+      }
+    } catch (error) {
+      console.error('API 요청 중 오류 발생:', error);
+    }
+    // handleOpenModal(); // 모달을 엽니다.
   };
 
   return (
@@ -815,7 +844,10 @@ const CalendarPage = () => {
 
       {/* 모달창 조건부 렌더링 */}
       {isModalOpen && (
-        <PerfumeDetailModal closeModal={handleCloseModal} />
+        <PerfumeDetailModal
+          closeModal={handleCloseModal}
+          perfumeDetail={selectedPerfumeDetail}
+        />
       )}
     </Page>
   )

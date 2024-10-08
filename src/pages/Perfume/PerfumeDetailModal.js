@@ -1,15 +1,15 @@
-import { React, useState } from "react";
+import { React, useEffect, useState } from "react";
 import styled from "styled-components";
+import { Doughnut } from 'react-chartjs-2'; // Chart.js 추가
+import { Chart as ChartJS, ArcElement, Tooltip as ChartTooltip, Legend } from 'chart.js';
+import axios from "axios";
+import qs from 'qs';
 
 import ic_close from '../../assets/images/ic_close.png';
 import ic_chart from '../../assets/images/ic_chart.png';
 import ic_info from '../../assets/images/ic_info.png';
 
-import topNoteImage1 from '../../assets/images/Flavors/bergamot.jpg';
-import topNoteImage2 from '../../assets/images/Flavors/hinoki.jpg';
-import middleNoteImage1 from '../../assets/images/Flavors/mint.jpg';
-import middleNoteImage2 from '../../assets/images/Flavors/cedarwood.jpg';
-import baseNoteImage from '../../assets/images/Flavors/mint.jpg';
+ChartJS.register(ArcElement, ChartTooltip, Legend);
 
 /* 모달창 배치 */
 const ModalOverlay = styled.div`
@@ -192,10 +192,146 @@ const InfoIcon = styled.img`
   cursor: pointer;
 `;
 
-const PerfumeDetailModal = ({ closeModal }) => {
+// 도넛 차트 UI
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false, // 화면 비율 유지 X
+  cutout: '70%', // 가운데 빈 부분 크기 (퍼센트)
+  plugins: {
+    legend: {
+      display: false, // 차트의 기본 legend 숨김
+    },
+    tooltip: {
+      callbacks: {
+        label: function (tooltipItem) {
+          // 데이터 + % 형식
+          const label = tooltipItem.label || '';
+          const value = tooltipItem.raw || 0;
+          return `${label}: ${value}%`;
+        },
+      },
+    },
+  },
+};
 
-  const [isTooltipVisible, setTooltipVisible] = useState(false)
+const ChartContentContainer = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center
+`;
 
+const ChartContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-top: 20px;
+  margin-right: 20px;
+`;
+
+const LabelsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-left: 20px;
+`;
+
+const LabelGuide = styled.p`
+  font-size: 16px;
+  font-family: "Pretendard-Regular";
+  color: #808080;
+`;
+
+const LabelItem = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-family: "Pretendard-Regular";
+`;
+
+const ColorBox = styled.div`
+  width: 20px;
+  height: 20px;
+  background-color: ${props => props.color};
+  margin-right: 10px;
+`;
+
+const RemakePerfumeContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 70px;
+`;
+
+const RemakePerfumeButton = styled.button`
+  width: 200px;
+  font-size: 16px;
+  font-family: "Pretendard-Regular";
+  background-color: #00656D;
+  color: #ffffff;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+`;
+
+
+const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
+
+  const [isTooltipVisible, setTooltipVisible] = useState(false);
+  const { title, description, accords, notes } = perfumeDetail;
+  const [noteImages, setNoteImages] = useState([]);
+
+  // 향료 이미지 조회 api
+  const fetchScentImages = async (notes) => {
+
+    const accessToken = localStorage.getItem('accessToken');
+    const lowercaseNotes = notes.map(note => note.toLowerCase());
+
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_KEY}/api/s3/scent-images`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        params: {
+          scents: lowercaseNotes,
+        },
+        paramsSerializer: params => {
+          return qs.stringify(params, { arrayFormat: 'repeat' });
+        }
+      });
+
+      return response.data.data; // 향료 이미지 URL 리스트 반환
+    } catch (error) {
+      console.error("Error fetching scent images: ", error);
+      throw new Error("Failed to fetch scent images");
+    }
+  };
+
+  // 해당하는 이미지 찾기 함수
+  const getNoteImage = (index) => {
+    // noteImages 배열에서 해당 index의 이미지 반환
+    return noteImages[index] || '' // 이미지 X -> 빈 문자열 반환
+  };
+
+  // 향료 이미지 가져오기
+  useEffect(() => {
+    const getImages = async () => {
+      try {
+        const images = await fetchScentImages(notes);
+        setNoteImages(images); // 이미지 URL 저장
+      } catch (error) {
+        console.error("Error loading images: ", error);
+      }
+    };
+    getImages();
+  }, [notes]);
+  
   const handleMouseEnter = () => {
     setTooltipVisible(true)
   };
@@ -204,18 +340,41 @@ const PerfumeDetailModal = ({ closeModal }) => {
     setTooltipVisible(false);
   };
 
-  const exampe_perfumeDescription =
-  "중요한 순간에 자신감을 높여주는 우아하고 정돈된 향입니다. 상쾌한 시트러스 노트로 시작해 은은한 백합과 자스민의 플로럴 어코드가 지적이고 우아한 분위기를 연출합니다. 베이스로는 따뜻한 샌달우드와 머스크가 안정감 있는 마무리를 만들어 긴장 속에서도 차분함과 자신감을 유지하게 해줍니다."
+  if (!perfumeDetail) {
+    return null;
+  }
+
+  // note 값 나누기
+  const topNotes = notes.slice(0, 2);
+  const middleNotes = notes.slice(2, 4);
+  const baseNotes = notes.slice(4, 5);
+
+  // 향조 배열 개수 -> 균등 비율
+  const accordsCount = accords.length;
+  const percentage = 100 / accordsCount;
+  const colors =['#4bc0c0', '#ffcd56', '#ff6384', '#36a2eb', '#9966ff'];
+
+  // 도넛 차트(데이터 구성)
+  const chartData = {
+    labels: accords,
+    datasets: [
+      { data: Array(accordsCount).fill(percentage), // 균등 비율 적용
+        backgroundColor: colors.slice(0, accordsCount), // 최대 5개 지정
+        hoverBackgroundColor: colors.slice(0, accordsCount),
+        borderWidth: 1,
+      },
+    ],
+  };
 
   return (
     <ModalOverlay>
       <ModalContent>
         <PerfumeTopContainer>
-          <PerfumeTitle>Fresh Start</PerfumeTitle>
+          <PerfumeTitle>{title}</PerfumeTitle>
           <CloseIcon src={ic_close} onClick={closeModal}></CloseIcon>
         </PerfumeTopContainer>
-        <PerfumeSubName>면접날의 향수</PerfumeSubName>
-        <PerfumeDescription>{exampe_perfumeDescription}</PerfumeDescription>
+        {/* <PerfumeSubName>면접날의 향수</PerfumeSubName> */}
+        <PerfumeDescription>{description}</PerfumeDescription>
         
         <Divider/>
         
@@ -225,31 +384,35 @@ const PerfumeDetailModal = ({ closeModal }) => {
 
         {/* Top Notes */}
         <NoteItem>
-          <NoteImage src={topNoteImage1} />
-          <NoteImage src={topNoteImage2} />
+          {topNotes.map((note, index) => (
+            <NoteImage key={index} src={getNoteImage(index)} />
+          ))}
           <NoteTextContainer>
             <NoteTitle>Top Notes</NoteTitle>
-            <NoteName>bergamot & hinoki</NoteName>
+            <NoteName>{topNotes.join(' & ')}</NoteName> {/* 노트 이름 &로 연결함 */}
           </NoteTextContainer>
         </NoteItem>
 
         {/* Middle Notes */}
         <NoteItem>
-          <NoteImage src={middleNoteImage1} />
-          <NoteImage src={middleNoteImage2} />
+          {middleNotes.map((note, index) => (
+            <NoteImage key={index} src={getNoteImage(index)} />
+          ))}
           <NoteTextContainer>
             <NoteTitle>Middle Notes</NoteTitle>
-            <NoteName>mint & cedarwood</NoteName>
+            <NoteName>{middleNotes.join(' & ')}</NoteName>
           </NoteTextContainer>
         </NoteItem>
 
         {/* Base Notes */}
         <NoteItem>
-          <NoteImage src={baseNoteImage} />
+          {baseNotes.map((note, index) => (
+            <NoteImage key={index} src={getNoteImage(index)} />
+          ))}
           <TransparentImage/>
           <NoteTextContainer>
             <NoteTitle>Base Notes</NoteTitle>
-            <NoteName>mint</NoteName>
+            <NoteName>{baseNotes.join(' & ')}</NoteName>
           </NoteTextContainer>
         </NoteItem>
 
@@ -258,8 +421,6 @@ const PerfumeDetailModal = ({ closeModal }) => {
         <ChartTitleContainer>
           <ChartIcon src={ic_chart}></ChartIcon>
           <ChartTitle>Main Accords</ChartTitle>
-
-
           <InfoIconWrapper
             onMouseEnter={handleMouseEnter}  // 마우스 올리면 툴팁 표시
             onMouseLeave={handleMouseLeave}  // 마우스 떼면 툴팁 숨기기
@@ -270,7 +431,27 @@ const PerfumeDetailModal = ({ closeModal }) => {
             </Tooltip>
           </InfoIconWrapper>
         </ChartTitleContainer>
+        <ChartContentContainer>
+          <ChartContainer>
+            {/* 도넛 차트 */}
+          <div style={{ width: '150px', height: '150px' }}>
+            <Doughnut data={chartData} options={chartOptions} />
+          </div>
 
+          <LabelsContainer>
+            <LabelGuide> · fragrance ratio</LabelGuide>
+            {accords.map((accord, index) => (
+              <LabelItem key={index}>
+                <ColorBox color={colors[index]} /> {/* 색상 박스 */}
+                <span>{accord}</span> {/* 향조 라벨 */}
+              </LabelItem>
+            ))}
+          </LabelsContainer>
+          </ChartContainer>
+        </ChartContentContainer>
+        <RemakePerfumeContainer>
+          <RemakePerfumeButton>향수 만들기</RemakePerfumeButton>
+        </RemakePerfumeContainer>
       </ModalContent>
     </ModalOverlay>
   )
