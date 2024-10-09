@@ -289,7 +289,7 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
   const fetchScentImages = async (notes) => {
 
     const accessToken = localStorage.getItem('accessToken');
-    const lowercaseNotes = notes.map(note => note.toLowerCase());
+    // const lowercaseNotes = notes.map(note => note.toLowerCase());
 
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_KEY}/api/s3/scent-images`, {
@@ -299,7 +299,7 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
           'Accept': 'application/json',
         },
         params: {
-          scents: lowercaseNotes,
+          scents: notes,
         },
         paramsSerializer: params => {
           return qs.stringify(params, { arrayFormat: 'repeat' });
