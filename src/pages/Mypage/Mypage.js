@@ -1,11 +1,11 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import MyInfoTab from './MyInfoTab';
 import CommunityTab from "./CommunityTab";
 import ProfileImageModal from "./ProfileImageModal";
 
-import example_profile from '../../assets/images/example_profile.jpg';
+import default_profile_img from '../../assets/images/default_profile_image.png';
 import PerfumeTab from "./PerfumeTab";
 
 const Page = styled.div`
@@ -196,19 +196,97 @@ const TabButton = styled.button`
 const Mypage = () => {
   const [activeTab, setActiveTab] = useState("MyInfo");
   const [isModalOpen, setModalOpen] = useState(false);
+  const [perfumeCount, setPerfumeCount] = useState(0);
+  const progressPercentage = (perfumeCount / 50) * 100;
 
-  const nickname = "dodo";
-  const email = "dodo@naver.com";
-  const perfumeCount = "17";
+  const [userProfile, setUserProfile] = useState({
+    nickname: "",
+    email: "",
+    imageUrl: default_profile_img,
+  });
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const memberId = localStorage.getItem('memberId');
+        const accessToken = localStorage.getItem('accessToken');
+
+        if (!memberId || !accessToken) {
+          console.error('로그인이 필요합니다.');
+          // 토큰이 없을 경우 로그인 페이지로 리다이렉트하거나 다시 로그인 유도
+          return;
+        }
+
+        const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/mypage/${memberId}`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        });
+
+        const data = await response.json();
+        if (data.code === '0000') {
+          setUserProfile({
+            nickname: data.data.nickname,
+            email: data.data.email,
+            imageUrl: data.data.imageUrl
+          });
+        } else {
+          console.error("사용자 정보 조회 실패", data.message);
+        }
+      } catch (error) {
+        console.error("사용자 정보 불러오기 오류", error)
+      }
+    };
+    fetchUserProfile();
+  }, []);
+
+  // 전체 향수 개수 조회
+  useEffect(() => {
+    const fetchPerfumeCount = async () => {
+      try {
+        const memberId = localStorage.getItem('memberId');
+        const accessToken = localStorage.getItem('accessToken');
   
-  const badgeNumber = 15; // 서버 값으로 교체 필요
-  const progressPercentage = (badgeNumber / 50) * 100;
+        if (!memberId || !accessToken) {
+          console.error('로그인이 필요합니다.');
+          // 토큰이 없을 경우 로그인 페이지로 리다이렉트하거나 다시 로그인 유도
+          return;
+        }
+
+        const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/perfume/count`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        });
+
+        const data = await response.json();
+        if (data.code === '0000') {
+          setPerfumeCount(data.data);
+        }
+    } catch (error) {
+      console.error("전체 향수 목록 오류:", error);
+      }
+    };
+    
+    fetchPerfumeCount();
+  }, []);
 
   // 모달 열기
   const openModal = () => setModalOpen(true);
 
   // 모달 닫기
   const closeModal = () => setModalOpen(false);
+
+  const handleProfileUpdate = (newImageUrl) => {
+    setUserProfile((prev) => ({
+      ...prev,
+      imageUrl: newImageUrl,
+    }));
+  };
 
   // 탭 전환
   const renderTabContent = () => {
@@ -231,14 +309,14 @@ const Mypage = () => {
           <ProfileContainer>
             <CircleWrapper>
               <CircleBorder percentage={progressPercentage}>
-                <CircleImage src={example_profile}></CircleImage>
+                <CircleImage src={userProfile.imageUrl || default_profile_img}></CircleImage>
               </CircleBorder>
-              <NumberBadge>{badgeNumber}</NumberBadge>
+              <NumberBadge>{perfumeCount}</NumberBadge>
             </CircleWrapper>
             <MyInfoContainer>
-              <MyNickName>{nickname}님</MyNickName>
-              <MyEmail>{email}</MyEmail>
-              <MyPerfumeCount>{nickname}님의 향수 {perfumeCount}개</MyPerfumeCount>
+              <MyNickName>{userProfile.nickname}님</MyNickName>
+              <MyEmail>{userProfile.email}</MyEmail>
+              <MyPerfumeCount>{userProfile.nickname}님의 향수 {perfumeCount}개</MyPerfumeCount>
             </MyInfoContainer>
           </ProfileContainer>
           <ProfileButtonContainer>
@@ -259,7 +337,10 @@ const Mypage = () => {
       </TabButtonContainer>
 
       {/* 모달이 열렸을 때만 표시 */}
-      {isModalOpen && <ProfileImageModal onClose={closeModal} />}
+      {isModalOpen && <ProfileImageModal
+        onClose={closeModal}
+        onUpdate={handleProfileUpdate}
+        initialImageUrl={userProfile.imageUrl} />}
     </Page>
   )
 }
