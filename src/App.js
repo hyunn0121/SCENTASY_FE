@@ -15,6 +15,9 @@ import { ExtraInfoProvider } from './contexts/ExtraInfoContext';
 import CalendarPage from './pages/Calendar/CalendarPage';
 import Mypage from './pages/Mypage/Mypage';
 import CommunityPage from './pages/Community/CommunityPage';
+import ChangeAddInfoPage from './pages/Mypage/ChangeAddInfoPage';
+import ChangelikeScentPage from './pages/Mypage/ChangelikeScentPage';
+import ChangeunlikeScentPage from './pages/Mypage/ChangeunlikeScentPage';
 
 function App() {
   return (
@@ -34,6 +37,9 @@ function App() {
             <Route path="/addInfo" element={<AddInfoPage />} />
             <Route path="/likeScent" element={<LikeScentPage />} />
             <Route path="/unlikeScent" element={<UnlikeScentPage />} />
+            <Route path="/changeAddInfo" element={<ChangeAddInfoPage/> } />
+            <Route path="/changelikeScent" element={<ChangelikeScentPage/>} />
+            <Route path="/changeunlikeScent" element={<ChangeunlikeScentPage/>} />
           </Routes>
         </div>
       </ExtraInfoProvider>

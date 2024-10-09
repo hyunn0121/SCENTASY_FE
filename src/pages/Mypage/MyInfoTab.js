@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import qs from 'qs';
 
 import rose from '../../assets/images/Flavors/rose.jpg';
 
@@ -141,35 +143,93 @@ const ChangeButton = styled.div`
   }
 `;
 
-const MyInfoTab = () => {
+const MyInfoTab = ({ nickname, age, gender, season, likedScents = [], dislikedScents = []}) => {
+  const navigate = useNavigate();
+  const [likedImages, setLikedImages] = useState([]);
+  const [dislikedImages, setDislikedImages] =useState([]);
 
-  // 서버에서 받아오는 데이터
-  const nickname = "dodo";
-  const age = "20대"
-  const gender = "여성"
-  const season = "봄"
+  const fetchScentImages = async (scents) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const params = new URLSearchParams();
+      scents.forEach((scent) => params.append("scents", scent));
 
-  const likedScents = [
-    { name: "장미", imageUrl: "rose.png" },
-    { name: "로즈마리", imageUrl: "rosemary.png" },
-    { name: "샌달우드", imageUrl: "rosemary.png" },
-    { name: "바닐라", imageUrl: "rosemary.png" },
-    { name: "화이트머스크", imageUrl: "rosemary.png" },
-  ]
 
-  const unlikedScents = [
-    { name: "장미", imageUrl: "rose.png" },
-    { name: "로즈마리", imageUrl: "rosemary.png" },
-    { name: "샌달우드", imageUrl: "rosemary.png" },
-    { name: "바닐라", imageUrl: "rosemary.png" },
-    { name: "화이트머스크", imageUrl: "rosemary.png" },
-  ]
+      const response = await fetch(
+        `${process.env.REACT_APP_API_KEY}/api/s3/scent-images?${params.toString()}`,{
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          }
+        });
 
-  // 이미지 경로를 로컬 또는 서버에서 받아올 수 있게 구성
-  const getImagePath = (imageName) => {
-    return `/path_to_images/${imageName}`; // 이미지 경로를 서버 또는 로컬 경로에 맞게 설정
+        if (!response.ok) {
+          // 응답 상태가 200이 아닌 경우 오류 처리
+          console.error("서버 응답 오류:", response.status);
+          return [];
+        }
+
+        const data = await response.json();
+        if (data.code === "0000") {
+          return data.data; // 이미지 URL 목록 반환
+        }
+    } catch (error) {
+      console.error("이미지 조회 오류: ", error);
+    }
+    return [];
   };
 
+  useEffect(() => {
+    const likedScentsEnglish = likedScents.map(scent => scent.english);
+    const dislikedScentsEnglish = dislikedScents.map(scent => scent.english);
+
+    // 좋아하는 향기 이미지 조회
+    fetchScentImages(likedScentsEnglish).then((urls) => {
+      setLikedImages(urls);
+    });
+
+    // 싫어하는 향기 이미지 조회
+    fetchScentImages(dislikedScentsEnglish).then((urls) => {
+      setDislikedImages(urls);
+    });
+  }, [likedScents, dislikedScents]);
+
+  // 취향 정보 수정 버튼
+  const handleChangeInfo = () => {
+    navigate('/ChangeAddInfo', {
+      state: {
+        originNickname: nickname,
+        originAge: age,
+        originGender: gender,
+        originSeason: seasonMap[season],
+        originLikedScents: likedScents,
+        originDislikedScents: dislikedScents
+      }
+    });
+  };
+
+  const genderMap = {
+    FEMALE: "여성",
+    MALE: "남성",
+    BOTH: "중성",
+  };
+
+  const ageMap = {
+    AGE10: "10대",
+    AGE20: "20대",
+    AGE30: "30대",
+    AGE40: "40대",
+    AGE50: "50대",
+    AGE60: "60대",
+  };
+  
+  const seasonMap = {
+    SPRING: "봄",
+    SUMMER: "여름",
+    FALL: "가을",
+    WINTER: "겨울",
+  };
 
   return(
     <MyInfoTabContainer>
@@ -181,10 +241,10 @@ const MyInfoTab = () => {
 
       <MainInfoContainer>
         <PreferenceContainer>
-          <InfoNormalText>{nickname}님은 </InfoNormalText><InfoHighlightText>{age}</InfoHighlightText>
-          <InfoNormalText>, 선호하는 향수 성별은 </InfoNormalText><InfoHighlightText>{gender}</InfoHighlightText>
+          <InfoNormalText>{nickname}님은 </InfoNormalText><InfoHighlightText>{ageMap[age]}</InfoHighlightText>
+          <InfoNormalText>, 선호하는 향수 성별은 </InfoNormalText><InfoHighlightText>{genderMap[gender]}</InfoHighlightText>
           <InfoNormalText>이시며, </InfoNormalText><br/>
-          <InfoNormalText>계절은 </InfoNormalText><InfoHighlightText>{season}</InfoHighlightText>
+          <InfoNormalText>계절은 </InfoNormalText><InfoHighlightText>{seasonMap[season]}</InfoHighlightText>
           <InfoNormalText>을 가장 좋아하시는군요!</InfoNormalText>
         </PreferenceContainer>
 
@@ -193,8 +253,8 @@ const MyInfoTab = () => {
           <ScentImageContainer>
             {likedScents.map((scent, index) => (
               <ScentItem key={index}>
-                <ScentImage src={rose} alt={scent.name} />
-                <ScentName>{scent.name}</ScentName>
+                <ScentImage src={likedImages[index] || rose} alt={scent} />
+                <ScentName>{scent.korean}</ScentName>
               </ScentItem>
             ))}
           </ScentImageContainer>
@@ -202,10 +262,10 @@ const MyInfoTab = () => {
         <ScentPreferenceContainer>
           <ScentPreferenceTitle>{nickname}님이 </ScentPreferenceTitle><ScentPreferenceHighlight>싫어하시는 향</ScentPreferenceHighlight>
           <ScentImageContainer>
-            {unlikedScents.map((scent, index) => (
+            {dislikedScents.map((scent, index) => (
               <ScentItem key={index}>
-                <ScentImage src={rose} alt={scent.name} />
-                <ScentName>{scent.name}</ScentName>
+                <ScentImage src={dislikedImages[index] || rose} alt={scent} />
+                <ScentName>{scent.korean}</ScentName>
               </ScentItem>
             ))}
           </ScentImageContainer>
@@ -213,7 +273,9 @@ const MyInfoTab = () => {
       </MainInfoContainer>
 
       <ChangeButtonContainer>
-        <ChangeButton>취향정보 수정하기</ChangeButton>
+        <ChangeButton onClick={handleChangeInfo}>
+          취향정보 수정하기
+          </ChangeButton>
       </ChangeButtonContainer>
     </MyInfoTabContainer>
   )
