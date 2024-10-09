@@ -1,9 +1,10 @@
-import React from "react";
-import { useState } from "react";
+import React, { useRef } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 
 import ic_close from '../../assets/images/ic_close.png'
-import default_profile_iamge from '../../assets/images/default_profile_image.png';
+import default_profile_image from '../../assets/images/default_profile_image.png';
+import axios from "axios";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -100,7 +101,57 @@ const ProfileImageChangeDone = styled.button`
   }
 `;
 
-const ProfileImageModal = ({onClose}) => {
+const ProfileImageModal = ({onClose, onUpdate, initialImageUrl }) => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPerviewUrl] = useState(initialImageUrl || default_profile_image);
+  const inputRef = useRef(); // input 요소에 대한 참조
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setPerviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      alert("사진 파일을 선택해주세요.");
+      return;
+    }
+
+    try {
+      const memberId = localStorage.getItem('memberId');
+      const accessToken = localStorage.getItem('accessToken');
+
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_KEY}/api/s3/profile-image?memberId=${memberId}`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      if (response.data.code === '0000') {
+        alert("프로필 사진이 성공적으로 변경되었습니다.");
+        onUpdate(previewUrl); // Mypage에서 이미지를 업데이트하도록 콜백 호출
+        onClose(); // 모달 닫기
+      } else {
+        alert("프로필 사진 변경에 실패했습니다.");
+        console.error("프로필 사진 등록 실패", response.data.message);
+      }
+    } catch (error) {
+      alert("프로필 사진 변경에 오류가 발생했습니다.");
+      console.error("프로필 사진 업로드 오류", error);
+    }
+  };
+
   return (
     <ModalOverlay>
       <ModalContainer ontainer>
@@ -108,10 +159,19 @@ const ProfileImageModal = ({onClose}) => {
           <ProfileChangeTitle>프로필 사진 변경</ProfileChangeTitle>
           <CloseIcon src={ic_close} onClick={onClose}/>
         </ProfileChangeTitleContainer>
-        <CircleImage src={default_profile_iamge}/>
+        <CircleImage src={previewUrl} alt="Profile Preview"/>
         <ProfileImageChangeGuide>변경할 사진을 선택해주세요.</ProfileImageChangeGuide>
-        <ChooseImageButton>사진 선택하기</ChooseImageButton>
-        <ProfileImageChangeDone>완료하기</ProfileImageChangeDone>
+        <ChooseImageButton onClick={() => inputRef.current.click() }>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            ref={inputRef} // input 요소에 대한 참조
+            style={{ display: 'none' }}
+          />
+          사진 선택하기
+          </ChooseImageButton>
+        <ProfileImageChangeDone onClick={handleUpload}>완료하기</ProfileImageChangeDone>
       </ModalContainer>
   </ModalOverlay>
 

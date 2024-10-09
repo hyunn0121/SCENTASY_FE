@@ -263,7 +263,7 @@ const RemakePerfumeContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 70px;
+  margin-top: 40px;
 `;
 
 const RemakePerfumeButton = styled.button`
