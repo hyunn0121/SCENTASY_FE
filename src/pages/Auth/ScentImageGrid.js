@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { labelToEnglishMap } from "./scentData";
 
 const GridContainer = styled.div`
   width: 70%;
@@ -63,24 +64,28 @@ const ScentImageGrid = ({ images, selectedImages, onImageClick }) => {
 
   return (
     <GridContainer>
-      {images.map((image, index) => (
-        <ImageContainer
-          key={index}
-          onMouseEnter={() => setHoveredImage(index)}
-          onMouseLeave={() => setHoveredImage(null)}
+      {images.map((image, index) => {
+        const englishLabel = labelToEnglishMap[image.label]; // 영어 레이블 변환
+
+        return (
+          <ImageContainer
+            key={index}
+            onMouseEnter={() => setHoveredImage(index)}
+            onMouseLeave={() => setHoveredImage(null)}
           >
-          <CircleImage
-            src={image.src}
-            alt={image.label}
-            selected={selectedImages.includes(image.label)}
-            onClick={() => onImageClick(image.label)}
-          />
-          <Label selected={selectedImages.includes(image.label)}>
-            {image.label}
-          </Label>
-          <Tooltip visible={hoveredImage === index}>{image.tooltip}</Tooltip>
-        </ImageContainer>
-      ))}
+            <CircleImage
+              src={image.src}
+              alt={image.label}
+              selected={selectedImages.includes(englishLabel)} // 여기에서 확인
+              onClick={() => onImageClick(englishLabel)} // 클릭할 때도 영어 레이블로
+            />
+            <Label selected={selectedImages.includes(englishLabel)}>
+              {image.label}
+            </Label>
+            <Tooltip visible={hoveredImage === index}>{image.tooltip}</Tooltip>
+          </ImageContainer>
+        );
+      })}
     </GridContainer>
   )
 };

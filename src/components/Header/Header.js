@@ -12,6 +12,8 @@ const Header = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('nickname'); // 로그아웃 시 닉네임 삭제
+        localStorage.removeItem('likedScents');
+        localStorage.removeItem('dislikedScents');
     
         navigate('/login');
     };
