@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { ExtraInfoContext } from "../../contexts/ExtraInfoContext";
 import axios from "axios";
@@ -136,16 +136,28 @@ const seasonMapping = {
   "겨울": "WINTER"
 };
 
-const AddInfoPage = () => {
-
+const ChangeAddInfoPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // 기존 사용자 정보
+  const {
+    originNickname = "",
+    originAge = "",
+    originGender = "",
+    originSeason = "",
+    originLikedScents = [],
+    originDislikedScents = []
+  } = location.state || {};
+
   const { extraInfo, setExtraInfo } = useContext(ExtraInfoContext)
 
-  const [nickname, setNickname] = useState(extraInfo.nickname || '');
+  const [nickname, setNickname] = useState(originNickname);
   const [isNicknameValid, setIsNicknameValid] = useState(null);
-  const [gender, setGender] = useState(extraInfo.gender || '');
-  const [age, setAge] = useState(extraInfo.age || '');
-  const [season, setSeason] = useState(extraInfo.season || '');
+  const [gender, setGender] = useState(originGender);
+  const [age, setAge] = useState(originAge);
+  const [season, setSeason] = useState(originSeason);
+  const [clickedButton, setClickedButton] = useState(originSeason);
 
   const handleNicknameCheck = async () => {
 
@@ -171,8 +183,21 @@ const AddInfoPage = () => {
       }
   } catch (error) {
       console.error("닉네임 중복 확인 오류:", error);
-      alert("닉네임 중복 확인 오류");
-  }
+      if (error.response && error.response.data) {
+        const { message, code } = error.response.data;
+        
+        // 서버 응답에 code가 포함된 경우 처리
+        if (code === "4202") {
+          alert("이미 존재하는 닉네임입니다. 다른 이름을 입력해주세요.");
+          setIsNicknameValid(false);
+        } else {
+          alert("닉네임은 영문만 가능합니다. 다시 확인해주세요.");
+          setIsNicknameValid(false);
+        }
+      } else {
+        alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+    } 
   };
 
   const handleNextClick = () => {
@@ -181,10 +206,13 @@ const AddInfoPage = () => {
     localStorage.setItem('age', age);
     localStorage.setItem('season', season);
     
-    navigate('/likeScent');
+    navigate('/changelikeScent', {
+      state: {
+        originLikedScents,
+        originDislikedScents
+      }
+    });
   };
-
-  const [clickedButton, setClickedButton] = useState(null);
 
   const handleSeasonClick = (selectedSeason) => {
     setSeason(seasonMapping[selectedSeason]); // 서버로 보낼 값을 설정
@@ -274,4 +302,4 @@ const AddInfoPage = () => {
   )
 };
 
-export default AddInfoPage;
+export default ChangeAddInfoPage;

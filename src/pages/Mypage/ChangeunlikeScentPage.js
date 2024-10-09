@@ -1,12 +1,13 @@
 import React from "react";
 import styled from "styled-components";
 import { useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { images, labelToEnglishMap } from "./scentData";
-import ScentImageGrid from "./ScentImageGrid";
+import ScentImageGrid from '../Auth/ScentImageGrid';
+import { images, labelToEnglishMap } from "../Auth/scentData";
 
 import { ExtraInfoContext } from "../../contexts/ExtraInfoContext";
+import { BsGenderMale } from "react-icons/bs";
 
 const MainContainer = styled.div`
   width: 80%;
@@ -60,16 +61,19 @@ const NextButton = styled.button`
   }
 `;
 
-
-const UnlikeScentPage = () => {
-
+const ChangeunlikeScentPage = () => {
   const navigate = useNavigate();
-  const { extraInfo, setExtraInfo } = useContext(ExtraInfoContext);
-  const [selectedImages, setSelectedImages] = useState([]);
+  const location = useLocation();
+  const { originDislikedScents = [] } = location.state || {};
 
-  const likedScents = JSON.parse(localStorage.getItem('likedScents'));
+  const { extraInfo, setExtraInfo } = useContext(ExtraInfoContext);
+  const [selectedImages, setSelectedImages] = useState(
+    originDislikedScents.map(scent => scent.english)
+  );
+
+  const likedScents = JSON.parse(localStorage.getItem('likedScents')) || [];
   const englishNames = selectedImages.map(label => labelToEnglishMap[label]);
-  
+
   const handleComplete = async () => {
     
     if (selectedImages.length !== 5) {
@@ -82,7 +86,13 @@ const UnlikeScentPage = () => {
       dislikedScents: englishNames,
     }));
 
-    localStorage.setItem('unlikedScents', JSON.stringify(englishNames));
+    const memberId = localStorage.getItem('memberId');
+    const nickname = localStorage.getItem('tempNickname');
+    const gender = localStorage.getItem('gender');
+    const age = localStorage.getItem('age');
+    const season = localStorage.getItem('season');
+
+    console.log("좋아하는 향: ", likedScents);
 
     // 로그를 추가하여 선택한 값들을 확인
     console.log("닉네임:", localStorage.getItem('tempNickname'));
@@ -93,29 +103,29 @@ const UnlikeScentPage = () => {
     console.log("싫어하는 향:", englishNames);
 
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_KEY}/auth/extra-info?email=${extraInfo.email}`,
+      const response = await axios.patch(
+        `${process.env.REACT_APP_API_KEY}/api/mypage/${memberId}`,
         {
-          nickname: localStorage.getItem('tempNickname'),
-          gender: localStorage.getItem('gender'), 
-          age: localStorage.getItem('age'),
-          season: localStorage.getItem('season'),
+          nickname,
+          gender,
+          age,
+          season,
           likedScents: likedScents,
-          dislikedScents: englishNames,
+          dislikedScents: englishNames
         }
       );
 
       const { code, message, result } = response.data;
 
       if (code === "0000") {
-        alert('추가정보 입력이 완료되었습니다.');
-        navigate('/login');
+        alert('추가정보 수정이 완료되었습니다.');
+        navigate('/mypage');
       } else {
-        alert("추가정보 입력에 실패했습니다. 다시 시도해주세요.")
+        alert("추가정보 수정에 실패했습니다. 다시 시도해주세요.")
       }
     } catch (error) {
       console.error("추가정보 입력 중 오류 발생: ", error);
-      alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+      alert('추가정보 수정 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
   }
 
@@ -144,7 +154,7 @@ const UnlikeScentPage = () => {
       <NextButton onClick={handleComplete}>추가정보 입력 완료하기</NextButton>
     </MainContainer>
   );
+
 };
 
-
-export default UnlikeScentPage;
+export default ChangeunlikeScentPage;

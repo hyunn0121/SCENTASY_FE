@@ -29,38 +29,45 @@ import thyme from '../../assets/images/Flavors/thyme.jpg';
 import vanilla from '../../assets/images/Flavors/vanilla.jpg';
 import whitemusk from '../../assets/images/Flavors/whitemusk.jpg';
 
+// 한글 -> 영어 매핑 데이터
 export const labelToEnglishMap = {
-  "알데하이드 C18": "ALDEHYDE",
-  "엠버": "AMBER",
-  "아쿠아": "AQUAL",
-  "베르가못": "BERGAMOT",
-  "블랙 체리": "BLACKCHERRY",
-  "블랙 커런트": "BLACKCURRANT",
-  "블랙페퍼": "PEPPER",
-  "시더우드": "CEDAR",
-  "무화과": "FIG",
-  "프랑킨센스": "FRANKINCENSE",
-  "프리지아": "FREESIA",
-  "자몽": "GRAPEFRUIT",
-  "그린": "GREEN",
-  "히노키": "HINOKI",
-  "레더": "LEATHER",
-  "레몬": "LEMON",
-  "릴리 오브 더 밸리": "LILYOFTHEVALLEY",
-  "매그놀리아": "MAGNOLIA",
-  "마린 블루": "BLUEMARIN",
-  "민트": "MINT",
-  "뮤게": "MUGUET",
-  "오션": "OCEAN",
-  "패츌리": "PATCHOULI",
-  "피치": "PEACH",
-  "로즈": "ROSE",
-  "로즈마리": "ROSEMARY",
-  "샌달우드": "SANDALWOOD",
-  "타임": "THYME",
-  "바닐라": "VANILLA",
-  "화이트 머스크": "MUSK"
+  "알데하이드 C18": "BASE_ALDEHYDE",
+  "엠버": "BASE_AMBER",
+  "아쿠아": "TOP_AQUA",
+  "베르가못": "TOP_BERGAMOT",
+  "블랙 체리": "TOP_BLACKCHERRY",
+  "블랙 커런트": "MIDDLE_BLACKCURRANT",
+  "블랙페퍼": "MIDDLE_PEPPER",
+  "시더우드": "BASE_CEDAR",
+  "무화과": "TOP_FIG",
+  "프랑킨센스": "BASE_FRANKINCENSE",
+  "프리지아": "MIDDLE_FREESIA",
+  "자몽": "TOP_GRAPEFRUIT",
+  "그린": "TOP_GREEN",
+  "히노키": "BASE_HINOKI",
+  "레더": "BASE_LEATHER",
+  "레몬": "TOP_LEMON",
+  "릴리 오브 더 밸리": "MIDDLE_LILYOFTHEVALLEY",
+  "매그놀리아": "MIDDLE_MAGNOLIA",
+  "마린 블루": "BASE_BLUEMARIN",
+  "민트": "TOP_MINT",
+  "뮤게": "MIDDLE_MUGUET",
+  "오션": "MIDDLE_OCEAN",
+  "패츌리": "BASE_PATCHOULI",
+  "피치": "TOP_PEACH",
+  "로즈": "MIDDLE_ROSE",
+  "로즈마리": "MIDDLE_ROSEMARY",
+  "샌달우드": "BASE_SANDALWOOD",
+  "타임": "TOP_THYME",
+  "바닐라": "BASE_VANILLA",
+  "화이트 머스크": "BASE_MUSK"
 };
+
+// 영어 -> 한글 매핑
+export const englishToLabelMap = Object.entries(labelToEnglishMap).reduce((acc, [label, english]) => {
+  acc[english] = label;
+  return acc;
+}, {});
 
 export const images = [
   { src: aldehydeC18, label: "알데하이드 C18", value: "ALDEHYDE",  tooltip: "달달한 냄새와 세정제(비누, 샴푸, 섬유유연제) 같이 우아하고 리치한 향기" },

@@ -7,6 +7,7 @@ import ProfileImageModal from "./ProfileImageModal";
 
 import default_profile_img from '../../assets/images/default_profile_image.png';
 import PerfumeTab from "./PerfumeTab";
+import { englishToLabelMap } from "../Auth/scentData";
 
 const Page = styled.div`
   background-color: #FAF8F1;
@@ -203,6 +204,11 @@ const Mypage = () => {
     nickname: "",
     email: "",
     imageUrl: default_profile_img,
+    age: "",
+    gender: "",
+    season: "",
+    likedScents: [],
+    dislikedScents: []
   });
 
   useEffect(() => {
@@ -230,8 +236,22 @@ const Mypage = () => {
           setUserProfile({
             nickname: data.data.nickname,
             email: data.data.email,
-            imageUrl: data.data.imageUrl
-          });
+            imageUrl: data.data.imageUrl,
+            age: data.data.age,
+            gender: data.data.gender,
+            season: data.data.season,
+            likedScents: data.data.likedScents.map(scent => ({
+              english: scent,
+              korean: englishToLabelMap[scent] || scent
+            })),
+            dislikedScents: data.data.dislikedScents.map(scent => ({
+              english: scent,
+              korean: englishToLabelMap[scent] || scent
+            })),
+          })
+          localStorage.setItem('season', data.data.season);
+          localStorage.setItem('likedScents', JSON.stringify(data.data.likedScents));
+          localStorage.setItem('dislikedScents', JSON.stringify(data.data.dislikedScents));
         } else {
           console.error("사용자 정보 조회 실패", data.message);
         }
@@ -241,6 +261,7 @@ const Mypage = () => {
     };
     fetchUserProfile();
   }, []);
+  
 
   // 전체 향수 개수 조회
   useEffect(() => {
@@ -292,7 +313,14 @@ const Mypage = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "MyInfo":
-        return <MyInfoTab />;
+        return <MyInfoTab
+          nickname={userProfile.nickname}
+          age={userProfile.age}
+          gender={userProfile.gender}
+          season={userProfile.season}
+          likedScents={userProfile.likedScents}
+          dislikedScents={userProfile.dislikedScents}
+          />;
       case "Community":
         return <CommunityTab />
       case "Perfume" :
