@@ -375,7 +375,7 @@ const ChattingPage = () => {
 
           setResponseCount((prevCount) => {
             const newCount = prevCount + 1;
-            if (newCount >= 1) {
+            if (newCount >= 3) {
               setShowPopup(true);
             }
             return newCount;
