@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { useState, useContext } from "react";
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
+import apiClient from "./TokenReissue";
 import { ExtraInfoContext } from "../../contexts/ExtraInfoContext";
 
 const TitleContainer = styled.div`
@@ -124,7 +125,7 @@ const LoginPage = () => {
         return;
       }
 
-      const response = await axios.post(`${process.env.REACT_APP_API_KEY}/auth/login`, {
+      const response = await apiClient.post(`${process.env.REACT_APP_API_KEY}/auth/login`, {
         email,
         password,
       });

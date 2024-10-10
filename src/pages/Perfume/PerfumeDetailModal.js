@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { Doughnut } from 'react-chartjs-2'; // Chart.js 추가
 import { Chart as ChartJS, ArcElement, Tooltip as ChartTooltip, Legend } from 'chart.js';
 import axios from "axios";
+import apiClient from "../Auth/TokenReissue";
 import qs from 'qs';
 
 import ic_close from '../../assets/images/ic_close.png';
@@ -93,8 +94,20 @@ const NotesTop = styled.p`
 
 const NoteItem = styled.div`
   display: flex;
-  align-items: center;
+  align-items:  center;
   margin-bottom: 15px;
+  min-height: 60px;
+`;
+
+const NoteImagesContainer = styled.div`
+  width: 100px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 60px; // 이미지 컨테이너의 일관된 너비를 보장
+  min-height: 60px;
+  flex-wrap: nowrap;
 `;
 
 const NoteImage = styled.img`
@@ -290,15 +303,9 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
   const fetchScentImages = async (notes) => {
 
     const accessToken = localStorage.getItem('accessToken');
-    // const lowercaseNotes = notes.map(note => note.toLowerCase());
 
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_KEY}/api/s3/scent-images`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+      const response = await apiClient.get('/api/s3/scent-images', {
         params: {
           scents: notes,
         },
@@ -314,12 +321,6 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
     }
   };
 
-  // 해당하는 이미지 찾기 함수
-  const getNoteImage = (index) => {
-    // noteImages 배열에서 해당 index의 이미지 반환
-    return noteImages[index] || '' // 이미지 X -> 빈 문자열 반환
-  };
-
   // 향료 이미지 가져오기
   useEffect(() => {
     const getImages = async () => {
@@ -332,6 +333,15 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
     };
     getImages();
   }, [notes]);
+
+  // 이미지 표시 함수
+  const getNoteImage = (noteType, index) => {
+    if (noteType === 'Top') return noteImages[index] || '';
+    if (noteType === 'Middle') return noteImages[index + topNotes.length] || '';
+    if (noteType === 'Base') return noteImages[index + topNotes.length + middleNotes.length] || '';
+
+    return '';
+  };
   
   const handleMouseEnter = () => {
     setTooltipVisible(true)
@@ -346,9 +356,9 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
   }
 
   // note 값 나누기
-  const topNotes = notes.slice(0, 2);
-  const middleNotes = notes.slice(2, 4);
-  const baseNotes = notes.slice(4, 5);
+  const topNotes = notes.filter(note => note.startsWith('TOP_'));
+  const middleNotes = notes.filter(note => note.startsWith('MIDDLE_'));
+  const baseNotes = notes.filter(note => note.startsWith('BASE_'));
 
   // 향조 배열 개수 -> 균등 비율
   const accordsCount = accords.length;
@@ -385,9 +395,11 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
 
         {/* Top Notes */}
         <NoteItem>
+        <NoteImagesContainer>
           {topNotes.map((note, index) => (
-            <NoteImage key={index} src={getNoteImage(index)} />
+            <NoteImage key={index} src={getNoteImage('Top', index)} />
           ))}
+        </NoteImagesContainer>
           <NoteTextContainer>
             <NoteTitle>Top Notes</NoteTitle>
             <NoteName>{topNotes.join(' & ')}</NoteName> {/* 노트 이름 &로 연결함 */}
@@ -396,9 +408,11 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
 
         {/* Middle Notes */}
         <NoteItem>
-          {middleNotes.map((note, index) => (
-            <NoteImage key={index} src={getNoteImage(index)} />
-          ))}
+          <NoteImagesContainer>
+            {middleNotes.map((note, index) => (
+              <NoteImage key={index} src={getNoteImage('Middle', index)} />
+            ))}
+          </NoteImagesContainer>
           <NoteTextContainer>
             <NoteTitle>Middle Notes</NoteTitle>
             <NoteName>{middleNotes.join(' & ')}</NoteName>
@@ -407,10 +421,11 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
 
         {/* Base Notes */}
         <NoteItem>
-          {baseNotes.map((note, index) => (
-            <NoteImage key={index} src={getNoteImage(index)} />
-          ))}
-          <TransparentImage/>
+          <NoteImagesContainer>
+            {baseNotes.map((note, index) => (
+              <NoteImage key={index} src={getNoteImage('Base', index)} />
+            ))}
+          </NoteImagesContainer>
           <NoteTextContainer>
             <NoteTitle>Base Notes</NoteTitle>
             <NoteName>{baseNotes.join(' & ')}</NoteName>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import apiClient from '../Auth/TokenReissue';
 import LoadingModal from './LoadingModal';
 import RatingModal from './RatingModal';
 import ChatbotTypingEffect from "./ChatbotTypingEffect";
@@ -295,17 +296,11 @@ const ChattingPage = () => {
           return;
         }
 
-        const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/mypage/${memberId}`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        });
+        const response = await apiClient.get(`/api/mypage/${memberId}`);
 
-        const data = await response.json();
-        if (data.code === '0000') {
-          setUserProfile(data.data.imageUrl || default_profile_iamge)
+        const { data } = response.data;
+        if (response.data.code === '0000') {
+          setUserProfile(data.imageUrl || default_profile_iamge)
         } else {
           console.error("사용자 정보 조회 실패", data.message);
         }
@@ -359,57 +354,40 @@ const ChattingPage = () => {
           throw new Error('No access token found');
         }
 
-        const url = `${process.env.REACT_APP_API_KEY}/api/chats/${memberId}`;
+        const url = `/api/chats/${memberId}`;
 
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-          },
-          body: JSON.stringify({ input })
-        });
+        const response = await apiClient.post(url, { input });
   
-        if (!response.ok) {
-          // 응답이 OK가 아니면, 상태 코드와 텍스트를 확인하여 디버깅
-          const errorText = await response.text(); // 응답의 텍스트를 읽어들임
-          throw new Error(`Network response was not ok. Status: ${response.status}, Text: ${errorText}`);
-        }
-
-        const responseData = await response.json();
-
         // 응답에서 code와 data를 추출
-        const { code, data } = responseData;
-        const BotResponse  = data.response;
+      const { code, data } = response.data;
 
-        // code가 성공 상태인 경우에만 처리
-        if (code === "0000") {
-          setTimeout(() => {
-            const botMessage = {
-              text: data.response,
-              isUser: false,
-              time: new Date().toLocaleTimeString(),
-            };
-  
-            newMessages[currentChatId].push(botMessage);
-            setMessages({ ...newMessages });
-  
-            setResponseCount((prevCount) => {
-              const newCount = prevCount + 1;
-              if (newCount >= 1) {
-                setShowPopup(true);
-              }
-              return newCount;
-            });
-          }, 3000);
-        } else {
-          throw new Error(`Error from server: ${responseData.message}`);
-        }
+      // code가 성공 상태인 경우에만 처리
+      if (code === "0000") {
+        setTimeout(() => {
+          const botMessage = {
+            text: data.response,
+            isUser: false,
+            time: new Date().toLocaleTimeString(),
+          };
 
-      } catch (error) {
-        console.error('Error sending message:', error);
+          newMessages[currentChatId].push(botMessage);
+          setMessages({ ...newMessages });
+
+          setResponseCount((prevCount) => {
+            const newCount = prevCount + 1;
+            if (newCount >= 1) {
+              setShowPopup(true);
+            }
+            return newCount;
+          });
+        }, 3000);
+      } else {
+        throw new Error(`Error from server: ${response.data.message}`);
       }
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
     }
   };
 

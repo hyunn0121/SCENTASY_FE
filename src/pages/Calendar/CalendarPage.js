@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useState } from "react";
 import styled from "styled-components";
+import apiClient from "../Auth/TokenReissue";
 import Calendar from "react-calendar";
 import 'react-calendar/dist/Calendar.css';
 import PerfumeDetailModal from '../Perfume/PerfumeDetailModal';
@@ -469,17 +470,12 @@ const CalendarPage = () => {
           return;
         }
 
-        const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/mypage/{memberId}`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        });
-
-        const data = await response.json();
-        if (data.code === '0000') {
-          console.log("프로필 사진 조회 성공")
+        const response = await apiClient.get(`/api/mypage/${memberId}`);
+        const { data } = response.data;
+        // console.log("프로필 사진 조회 성공: ", data.imageUrl);
+        
+        if (response.data.code === '0000') {
+          console.log("프로필 사진 조회 성공: ", data.imageUrl);
           setUserProfile(data.imageUrl || default_profile_img);
         }
       } catch (error) {
@@ -503,6 +499,7 @@ const CalendarPage = () => {
           return;
         }
 
+        /*
         const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/perfume/count`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -510,9 +507,13 @@ const CalendarPage = () => {
             'Accept': 'application/json',
           },
         });
+        */
 
-        const data = await response.json();
+        const response = await apiClient.get(`/api/perfume/count`);
+
+        const data = await response.data;
         if (data.code === '0000') {
+          console.log("전체 향수 개수: ", data.data);
           setPerfumeCount(data.data);
         }
     } catch (error) {
@@ -535,41 +536,35 @@ const CalendarPage = () => {
           // 토큰이 없을 경우 로그인 페이지로 리다이렉트하거나 다시 로그인 유도
           return;
         }
-  
-        const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/perfume`, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        });
-  
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.error('인증 오류: 액세스 토큰이 만료되었거나 유효하지 않습니다.');
-            // 만료된 토큰 처리: 재로그인 로직 추가 가능
-          }
-          throw new Error(`Error: ${response.status}`);
-        }
-  
-      const data = await response.json();
-      if (data.code === '0000') {
-        // 안전하게 memos 배열에 접근
-        const perfumeDataWithMemoCount = data.data.map(perfume => ({
-          ...perfume,
-          memoCount: perfume.memos ? perfume.memos.length : 0, // memos가 undefined일 때 0으로 처리
-        }));
 
-        const perfumeDates = data.data.map((perfume) => new Date(perfume.createdAt));
-        setPerfumeDates(perfumeDates);  // 날짜 목록 저장
-        setPerfumeList(perfumeDataWithMemoCount);
+        const response = await apiClient.get(`/api/perfume`);
+
+        // Axios 응답 객체는 response.status로 상태 코드를 확인합니다.
+      if (response.status === 200) {
+        const { code, data } = response.data;
+        
+        // 응답 코드가 '0000'일 때만 데이터를 처리합니다.
+        if (code === '0000') {
+          // 안전하게 memos 배열에 접근
+          const perfumeDataWithMemoCount = data.map(perfume => ({
+            ...perfume,
+            memoCount: perfume.memos ? perfume.memos.length : 0, // memos가 undefined일 때 0으로 처리
+          }));
+
+          const perfumeDates = data.map((perfume) => new Date(perfume.createdAt));
+          setPerfumeDates(perfumeDates);  // 날짜 목록 저장
+          setPerfumeList(perfumeDataWithMemoCount);
+        } else {
+          console.error("Failed to fetch perfume data, code:", code);
+        }
       } else {
-        console.error("Failed to fetch perfume data");
+        console.error('Error: ', response.status);
+        throw new Error(`HTTP 오류: ${response.status}`);
       }
-      } catch (error) {
-        console.error("전체 향수 목록 오류:", error);
-      }
-    };
+    } catch (error) {
+      console.error("전체 향수 목록 오류:", error);
+    }
+  };
   
     fetchPerfumeData();
   }, []);
@@ -587,6 +582,7 @@ const CalendarPage = () => {
 
       console.log(`Submitting memo for perfume ID: ${selectedPerfumeId}`);
 
+      /*
       const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/memo/write/${memberId}/${selectedPerfumeId}`, {
         method: 'POST',
         headers: {
@@ -595,8 +591,14 @@ const CalendarPage = () => {
         },
         body: JSON.stringify({ content: memoContent }),
       });
+      */
+      
 
-      if (response.ok) {
+      const url = `/api/memo/write/${memberId}/${selectedPerfumeId}`;
+      const response = await apiClient.post(url, { content: memoContent });
+      const { code, data } = response.data;
+
+      if (code === '0000') {
         alert('메모가 성공적으로 저장되었습니다.');
         setMemoContent(''); // 메모 제출 후 입력 필드 초기화
       } else {
@@ -765,6 +767,7 @@ const CalendarPage = () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
+      /*
       const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/perfume/${selectedPerfumeId}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -772,8 +775,11 @@ const CalendarPage = () => {
           'Accept': 'application/json',
         },
       });
+      */
 
-      const data = await response.json();
+      const response = await apiClient.get(`/api/perfume/${selectedPerfumeId}`);
+
+      const data = await response.data;
       if (data.code === '0000') {
         setSelectedPerfumeDetail(data.data); // 향수 상세정보
         setIsModalOpen(true);

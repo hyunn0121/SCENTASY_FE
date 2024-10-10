@@ -75,9 +75,6 @@ const MemoContainer = styled.div`
   &:last-child {
     margin-bottom: 0; /* 마지막 MemoContainer의 margin-bottom 제거 */
   }
-
-  /* 동적으로 높이를 조정 */
-  flex: 1; /* 메모 컨테이너가 남은 공간을 균등하게 나눠 가짐 */
 `;
 
 const MemoIcon = styled.img`
