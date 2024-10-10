@@ -4,6 +4,7 @@ import styled from "styled-components";
 import Calendar from "react-calendar";
 import 'react-calendar/dist/Calendar.css';
 import PerfumeDetailModal from '../Perfume/PerfumeDetailModal';
+import MemoDetailModal from "../Perfume/MemoDetailModal";
 
 import { ko } from 'date-fns/locale'; 
 
@@ -346,11 +347,15 @@ const MemoCount = styled.p`
   color: #181818;
   font-size: 14px;
   margin: 0;
+  cursor: pointer;
 `;
 
 const PerfumeListContainer = styled.div`
-  width: 100%;
+  width: 90%;
   padding: 10px 0;
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 10px 0;
 `;
 
 const PerfumeMemoContainer = styled.div`
@@ -360,6 +365,7 @@ const PerfumeMemoContainer = styled.div`
   align-items: flex-start;
   flex-direction: column;
   padding-top: 10px;
+  cursor: pointer;
 
   textarea {
     &:focus {
@@ -399,6 +405,7 @@ const PerfumeDetailButton = styled.button`
   padding: 8px 40px;
   margin-top: 20px;
   text-align: center;
+  margin-bottom: 10px;
 `;
 
 const CalendarPage = () => {
@@ -421,9 +428,24 @@ const CalendarPage = () => {
   const [memoContent, setMemoContent] = useState("");
   const [selectedPerfumeDetail, setSelectedPerfumeDetail] = useState({});
 
+  // 메모 조회 관련
+  const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
+  const [selectedPerfumeMemos, setSelectedPerfumeMemos] = useState([]);
+  const [selectedPerfumeTitle, setSelectedPerfumeTitle] = useState("");
+  const [selectedPerfumeDate, setSelectedPerfumeDate] = useState("");
+  
   const handlePerfumeClick = (event, perfume) => {
     event.stopPropagation();
-    setSelectedPerfumeId(perfume.id);
+    if (perfume.memos && perfume.memos.length > 0) {
+      setSelectedPerfumeMemos(perfume.memos); // 메모 목록 설정
+      setSelectedPerfumeTitle(perfume.title); // 향수 제목 설정
+      setSelectedPerfumeDate(perfume.createdAt); // 향수 날짜 설정
+    } else {
+      setSelectedPerfumeMemos([]);
+      setSelectedPerfumeTitle("");
+      setSelectedPerfumeDate("");
+    }
+    setIsMemoModalOpen(true);
   };
   
   const progressPercentage = (perfumeCount / 50) * 100;
@@ -457,10 +479,11 @@ const CalendarPage = () => {
 
         const data = await response.json();
         if (data.code === '0000') {
+          console.log("프로필 사진 조회 성공")
           setUserProfile(data.imageUrl || default_profile_img);
         }
       } catch (error) {
-
+        console.log("프로필 사진 조회 실패", error)
       }
     };
 
@@ -619,6 +642,22 @@ const CalendarPage = () => {
     );
   };
 
+  const handleMemoCountClick = (event, perfume) => {
+    event.stopPropagation();
+    if (perfume.memos && perfume.memos.length > 0) {
+      setSelectedPerfumeMemos(perfume.memos);
+      setSelectedPerfumeTitle(perfume.title);
+      setSelectedPerfumeDate(perfume.createdAt);
+    } else {
+      setSelectedPerfumeMemos([]);
+    }
+    setIsMemoModalOpen(true);
+  };
+
+  const handleCloseMemoModal = () => {
+    setIsMemoModalOpen(false);
+    setSelectedPerfumeMemos([]);
+  };
 
   const handleDateClick = (day) => {
     setSelectedDate(day);
@@ -804,7 +843,8 @@ const CalendarPage = () => {
                         isSelected={selectedPerfumeId === perfume.perfumeId}
                         onClick={(event) => handleClick(event, perfume)}>
                         <span>{perfume.title}</span>
-                        <MemoCount>메모 {perfume.memos ? perfume.memos.length : 0}개</MemoCount>
+                        <MemoCount onClick={(event) =>  handleMemoCountClick(event, perfume)}>
+                          메모 {perfume.memos ? perfume.memos.length : 0}개</MemoCount>
                       </PerfumeItem>
                       {/* 마지막 항목 뒤에는 Divider를 추가하지 않음 */}
                       {index < selectedPerfumes.length - 1 && <ListDivider />}
@@ -847,6 +887,16 @@ const CalendarPage = () => {
         <PerfumeDetailModal
           closeModal={handleCloseModal}
           perfumeDetail={selectedPerfumeDetail}
+        />
+      )}
+
+      {/* 메모 모달 조건부 렌더링 */}
+      {isMemoModalOpen && (
+        <MemoDetailModal
+          title={selectedPerfumeTitle}
+          date={selectedPerfumeDate}
+          memos={selectedPerfumeMemos}
+          onClose={handleCloseMemoModal}
         />
       )}
     </Page>

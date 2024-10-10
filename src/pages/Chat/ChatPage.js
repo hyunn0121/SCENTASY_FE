@@ -7,8 +7,10 @@ import ChatbotTypingEffect from "./ChatbotTypingEffect";
 
 import ic_addChat from '../../assets/images/ic_addChat.png';
 import ic_Search from '../../assets/images/ic_search.png';
+import default_profile_iamge from '../../assets/images/default_profile_image.png';
 import user from '../../assets/images/user.png';
 import chatbot from '../../assets/images/chatbot.png';
+import PerfumeRecipeModal from './PerfumeRecipeModal';
 
 const ChatContainer = styled.div`
   display: flex;
@@ -265,6 +267,7 @@ const PopupButton = styled.button`
 `;
 
 const ChattingPage = () => {
+  const [userProfile, setUserProfile] = useState(default_profile_iamge);
   const [messages, setMessages] = useState({});
   const [input, setInput] = useState('');
   const [selectedChat, setSelectedChat] = useState(null);
@@ -274,9 +277,44 @@ const ChattingPage = () => {
   const [popupPersistent, setPopupPersistent] = useState(true);
   const [isInputDisabled, setIsInputDisabled] = useState(false);
   const [isLoadingModalVisible, setIsLoadingModalVisible] = useState(false);
+  const [isPerfumeRecipeModalVisible, setIsPerfumeRecipeModalVisible] = useState(false);
   const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
-
   const messageEndRef = useRef(null);
+
+  const [perfumeRecipe, setPerfumeRecipe] = useState([]);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const memberId = localStorage.getItem('memberId');
+        const accessToken = localStorage.getItem('accessToken');
+
+        if (!memberId || !accessToken) {
+          console.error('로그인이 필요합니다.');
+          // 토큰이 없을 경우 로그인 페이지로 리다이렉트하거나 다시 로그인 유도
+          return;
+        }
+
+        const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/mypage/${memberId}`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        });
+
+        const data = await response.json();
+        if (data.code === '0000') {
+          setUserProfile(data.data.imageUrl || default_profile_iamge)
+        } else {
+          console.error("사용자 정보 조회 실패", data.message);
+        }
+      } catch (error) {
+        console.error("사용자 정보 불러오기 오류", error)
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
   useEffect(() => {
     if (messageEndRef.current) {
@@ -359,7 +397,7 @@ const ChattingPage = () => {
   
             setResponseCount((prevCount) => {
               const newCount = prevCount + 1;
-              if (newCount >= 5) {
+              if (newCount >= 1) {
                 setShowPopup(true);
               }
               return newCount;
@@ -375,12 +413,60 @@ const ChattingPage = () => {
     }
   };
 
+  // 향수 레시피 서버 요청
+  const generatePerfumerRecipe = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      if (!accessToken) {
+        throw new Error('No access token found');
+      }
+
+      const url = `${process.env.REACT_APP_API_KEY}/api/perfume/recipe`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`응답 실패 - Status: ${response.status}, Text: ${errorText}`);
+      }
+
+      const responseData = await response.json();
+      console.log('응답 데이터:', responseData);
+
+      const { code, data } = responseData;
+      const notes = data.notes;
+
+      if (code === "0000" && notes) {
+        console.log("향수 레시피 생성 성공:", notes);
+        setPerfumeRecipe(notes);
+        alert("향수 레시피 생성이 완료되었습니다!");
+      } else {
+        throw new Error(`Error from server: ${responseData.message}`);
+      }
+
+    } catch (error) {
+      console.error('향수 레시피 생성 실패:', error);
+      alert("향수 레시피 생성에 실패했습니다.");
+    }
+  };
+
 
   const handleLoadingModal = () => {
     setShowPopup(false);
     setPopupPersistent(false);
     setIsInputDisabled(true);
     setIsLoadingModalVisible(true);
+
+    // 향수 레시피 생성 api
+    generatePerfumerRecipe();
 
     setTimeout(() => {
       setIsLoadingModalVisible(false);
@@ -413,6 +499,28 @@ useEffect(() => {
 
   const handleChatItemClick = (index) => {
     setSelectedChat(index);
+  };
+
+  const handleOpenPerfumeRecipeModal = async () => {
+    setShowPopup(false); // 팝업 버튼 2개 닫기
+
+    await generatePerfumerRecipe();
+
+    setIsPerfumeRecipeModalVisible(true);
+  };
+
+  const handleClosePerfumeRecipeModal = () => {
+    setIsPerfumeRecipeModalVisible(false);
+  };
+
+  const handlePerfumeMakeButtonClick = () => {
+    setIsPerfumeRecipeModalVisible(false);
+    setIsLoadingModalVisible(true);
+
+    setTimeout(() => {
+      setIsLoadingModalVisible(false);
+      setIsRatingModalVisible(true);
+    }, 30000);
   };
 
   const handleCloseRatingModal = () => {
@@ -453,25 +561,25 @@ useEffect(() => {
                   </MessageContent>
                   <TimeStamp isUser={msg.isUser}>{msg.time}</TimeStamp>
                 </MessageWrapper>
-                {msg.isUser && <ProfileImage src={user} alt="User Profile" isUser />}
+                {msg.isUser && <ProfileImage src={userProfile} alt="User Profile" isUser />}
               </Message>
             ))}
             <div ref={messageEndRef} /> {/* 이 부분을 추가하여 자동 스크롤이 되도록 설정 */}
           </MessageList>
           {showPopup && (
             <Popup>
-              {popupPersistent ? (
-                <>
-                  <PopupButton onClick={handleLoadingModal}>향수 레시피 생성하기</PopupButton> {/* 향수 레시피 생성 api로 수정*/}
-                  <PopupButton onClick={handleClosePopup}>채팅 계속 하기</PopupButton>
-                </>
-              ) : (
-                <>
-                  <PopupButton onClick={handleLoadingModal}>향수 만들기</PopupButton>
-                  <PopupButton onClick={handleClosePopup}>다시 만들기</PopupButton>
-                </>
-              )}
+              <PopupButton onClick={handleOpenPerfumeRecipeModal}>향수 레시피 생성하기</PopupButton>
+              <PopupButton onClick={handleClosePopup}>채팅 계속 하기</PopupButton>
             </Popup>
+          )}
+
+          {/* PerfumeRecipeModal 렌더링 */}
+          {isPerfumeRecipeModalVisible && (
+            <PerfumeRecipeModal
+              recipe={perfumeRecipe} 
+              onClose={handleClosePerfumeRecipeModal}
+              onMake={handlePerfumeMakeButtonClick}
+            />
           )}
           
           <InputArea>
@@ -488,7 +596,7 @@ useEffect(() => {
       </ChatBody>
 
       <LoadingModal 
-        isVisible={isLoadingModalVisible} 
+        isVisible={isLoadingModalVisible}
         onClose={() => setIsLoadingModalVisible(false)} 
       />
       {isRatingModalVisible && <RatingModal onClose={handleCloseRatingModal} />} {/* RatingModal 렌더링 */}
