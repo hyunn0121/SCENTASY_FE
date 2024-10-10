@@ -116,9 +116,6 @@ const PerfumeRecipeModal = ({ recipe, onClose, onMake }) => {
   console.log("향수 레시피 제목: ", recipe.title);
   console.log("향수 레시피 설명: ", recipe.description);
 
-  const title = "생일의 향기";
-  const description = "'생일의 향기'는 생일의 즐거움과 기쁨을 향기로 표현한 향수입니다. 상쾌한 시트러스의 향이 기분을 더욱 밝게 만들어주고, 그 뒤를 이어 화이트 머스크의 따뜻하고 포근한 향이 깊은 행복을 감싸줍니다. 생일 파티를 더욱 빛나게 해줄 이 향수는 맑은 가을 날, 즐거운 친구들과 함께하는 특별한 순간을 아름답게 기억하게 해줄 것입니다.";
-
   // 향수 만들기 버튼 클릭
   const handlePerfumeMakeClick = async () => {
     try {
@@ -152,8 +149,8 @@ const PerfumeRecipeModal = ({ recipe, onClose, onMake }) => {
           <CloseButton src={ic_close} onClick={onClose}/>
         </TitleContainer>
         <PerfumeRecipeContainer>
-          <PerfumeTitle>{title}</PerfumeTitle>
-          <PerfumeDescription>{description}</PerfumeDescription>
+          <PerfumeTitle>{recipe.title}</PerfumeTitle>
+          <PerfumeDescription>{recipe.description}</PerfumeDescription>
           <PerfumeRecipeNoteGuide>Note 구성</PerfumeRecipeNoteGuide>
           {recipe.notes && recipe.notes.length > 0 ? (
             recipe.notes.map((note, index) => (

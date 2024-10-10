@@ -18,7 +18,7 @@ const ModalOverlay = styled.div`
   top: 20px; /* 상단에서 20px 간격 */
   bottom: 20px; /* 하단에서 20px 간격 */
   left: 0;
-  width: 100vw;
+  width: 110vw;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -28,14 +28,15 @@ const ModalOverlay = styled.div`
 
 const ModalContent = styled.div`
   width: 350px;
-  height: 650px;
+  max-height: 80vh;
   background-color: #ffffff;
   border-radius: 12px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  overflow-y: auto; /* 내용 길어짐 -> 스크롤 */
 `;
 
 const PerfumeTopContainer = styled.div`
@@ -64,14 +65,21 @@ const PerfumeSubName = styled.p`
   margin: 0;
 `;
 
+const DescriptionContainer = styled.div`
+  margin-bottom: 10px;
+`;
+
 const PerfumeDescription = styled.p`
   font-size: 14px;
   font-family: "Pretendard-Regular";
   text-align: left;
   color: #666666;
   line-height: 1.5;
-  max-height: 150px;
+  background-color: #f0f0f0; /* 임시로 배경색 설정 */
   overflow-y: auto;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  z-index: 10;
 `;
 
 const Divider = styled.hr`
@@ -86,9 +94,9 @@ const NoteContainer = styled.div`
   flex-direction: column;
 `;
 
-const NotesTop = styled.p`
-  font-size: 14px;
-  font-famiily: "Pretendard-Black";
+const NoteGuideTitle = styled.p`
+  font-size: 16px;
+  font-family: "Pretendard-SemiBold";
   text-align: left;
 `;
 
@@ -100,13 +108,13 @@ const NoteItem = styled.div`
 `;
 
 const NoteImagesContainer = styled.div`
-  width: 100px;
+  width: 160px;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   justify-content: flex-start;
-  min-width: 60px; // 이미지 컨테이너의 일관된 너비를 보장
+  align-items: center;
+  min-width: 80px; // 이미지 컨테이너의 일관된 너비를 보장
   min-height: 60px;
+  margin-left: 20px;
   flex-wrap: nowrap;
 `;
 
@@ -118,6 +126,7 @@ const NoteImage = styled.img`
 `;
 
 const NoteTextContainer = styled.div`
+  width: 100px;
   display: flex;
   flex-direction: column;
   margin-left: 20px;
@@ -127,14 +136,14 @@ const NoteTitle = styled.p`
   font-size: 14px;
   font-family: "Pretendard-Bold";
   margin: 0;
-  text-align: left;
+  text-align: center;
 `;
 
 const NoteName = styled.p`
   font-size: 12px;
   font-family: "Pretendard-Regular";
   margin: 0;
-  text-align: left;
+  text-align: center;
   color: #737373;
 `;
 
@@ -220,7 +229,8 @@ const chartOptions = {
           // 데이터 + % 형식
           const label = tooltipItem.label || '';
           const value = tooltipItem.raw || 0;
-          return `${label}: ${value}%`;
+          const formattedValue = (value).toFixed(3);
+          return `${label}: ${formattedValue}%`;
         },
       },
     },
@@ -276,7 +286,7 @@ const RemakePerfumeContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 20px;
 `;
 
 const RemakePerfumeButton = styled.button`
@@ -297,6 +307,8 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
 
   const [isTooltipVisible, setTooltipVisible] = useState(false);
   const { title, description, accords, notes } = perfumeDetail;
+  console.log("향수 상세정보: ", description);
+
   const [noteImages, setNoteImages] = useState([]);
 
   // 향료 이미지 조회 api
@@ -325,7 +337,8 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
   useEffect(() => {
     const getImages = async () => {
       try {
-        const images = await fetchScentImages(notes);
+        const noteEnValues = notes.map(note => note.note_en);
+        const images = await fetchScentImages(noteEnValues);
         setNoteImages(images); // 이미지 URL 저장
       } catch (error) {
         console.error("Error loading images: ", error);
@@ -356,22 +369,29 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
   }
 
   // note 값 나누기
-  const topNotes = notes.filter(note => note.startsWith('TOP_'));
-  const middleNotes = notes.filter(note => note.startsWith('MIDDLE_'));
-  const baseNotes = notes.filter(note => note.startsWith('BASE_'));
+  const topNotes = notes.filter(note => note.note_en.startsWith('TOP_'));
+  const middleNotes = notes.filter(note => note.note_en.startsWith('MIDDLE_'));
+  const baseNotes = notes.filter(note => note.note_en.startsWith('BASE_'));
 
   // 향조 배열 개수 -> 균등 비율
   const accordsCount = accords.length;
   const percentage = 100 / accordsCount;
   const colors =['#4bc0c0', '#ffcd56', '#ff6384', '#36a2eb', '#9966ff'];
 
+  const accordsData = perfumeDetail.accords;
+  // 전체 합 계산
+  const totalValue = accordsData.reduce((sum, item) => sum + item.value, 0);
+
+  // 비율 계산
+  const chartValues = accordsData.map(item => (item.value / totalValue));
+
   // 도넛 차트(데이터 구성)
   const chartData = {
-    labels: accords,
+    labels: accordsData.map(item => item.accord),
     datasets: [
-      { data: Array(accordsCount).fill(percentage), // 균등 비율 적용
-        backgroundColor: colors.slice(0, accordsCount), // 최대 5개 지정
-        hoverBackgroundColor: colors.slice(0, accordsCount),
+      { data: chartValues, // 1로 계산된 비율 적용
+        backgroundColor: colors.slice(0, accordsData.length), // 최대 5개 지정
+        hoverBackgroundColor: colors.slice(0, accordsData.length),
         borderWidth: 1,
       },
     ],
@@ -384,52 +404,53 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
           <PerfumeTitle>{title}</PerfumeTitle>
           <CloseIcon src={ic_close} onClick={closeModal}></CloseIcon>
         </PerfumeTopContainer>
-        {/* <PerfumeSubName>면접날의 향수</PerfumeSubName> */}
-        <PerfumeDescription>{description}</PerfumeDescription>
+        <DescriptionContainer>
+          <PerfumeDescription>{description}</PerfumeDescription>
+        </DescriptionContainer>
         
         <Divider/>
         
         <NoteContainer>
-          <NotesTop>Notes</NotesTop>
+          <NoteGuideTitle>Notes</NoteGuideTitle>
         </NoteContainer>
 
         {/* Top Notes */}
         <NoteItem>
-        <NoteImagesContainer>
-          {topNotes.map((note, index) => (
-            <NoteImage key={index} src={getNoteImage('Top', index)} />
-          ))}
-        </NoteImagesContainer>
           <NoteTextContainer>
             <NoteTitle>Top Notes</NoteTitle>
-            <NoteName>{topNotes.join(' & ')}</NoteName> {/* 노트 이름 &로 연결함 */}
+            <NoteName>{topNotes.map(note => note.note_kr).join(' & ')}</NoteName> {/* 노트 이름 &로 연결함 */}
           </NoteTextContainer>
+          <NoteImagesContainer>
+            {topNotes.map((note, index) => (
+              <NoteImage key={index} src={getNoteImage('Top', index)} />
+            ))}
+        </NoteImagesContainer>
         </NoteItem>
 
         {/* Middle Notes */}
         <NoteItem>
+          <NoteTextContainer>
+            <NoteTitle>Middle Notes</NoteTitle>
+            <NoteName>{middleNotes.map(note => note.note_kr).join(' & ')}</NoteName>
+          </NoteTextContainer>
           <NoteImagesContainer>
             {middleNotes.map((note, index) => (
               <NoteImage key={index} src={getNoteImage('Middle', index)} />
             ))}
           </NoteImagesContainer>
-          <NoteTextContainer>
-            <NoteTitle>Middle Notes</NoteTitle>
-            <NoteName>{middleNotes.join(' & ')}</NoteName>
-          </NoteTextContainer>
         </NoteItem>
 
         {/* Base Notes */}
         <NoteItem>
+          <NoteTextContainer>
+            <NoteTitle>Base Notes</NoteTitle>
+            <NoteName>{baseNotes.map(note => note.note_kr).join(' & ')}</NoteName>
+          </NoteTextContainer>
           <NoteImagesContainer>
             {baseNotes.map((note, index) => (
               <NoteImage key={index} src={getNoteImage('Base', index)} />
             ))}
           </NoteImagesContainer>
-          <NoteTextContainer>
-            <NoteTitle>Base Notes</NoteTitle>
-            <NoteName>{baseNotes.join(' & ')}</NoteName>
-          </NoteTextContainer>
         </NoteItem>
 
         <Divider/>
@@ -456,10 +477,10 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
 
           <LabelsContainer>
             <LabelGuide> · fragrance ratio</LabelGuide>
-            {accords.map((accord, index) => (
+            {accords.map((accordItem, index) => (
               <LabelItem key={index}>
                 <ColorBox color={colors[index]} /> {/* 색상 박스 */}
-                <span>{accord}</span> {/* 향조 라벨 */}
+                <span>{`${accordItem.accord}: ${accordItem.value}`}</span> {/* 향조 라벨 */}
               </LabelItem>
             ))}
           </LabelsContainer>
