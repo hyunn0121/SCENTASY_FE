@@ -33,7 +33,7 @@ const ModalContent = styled.div`
   padding: 20px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-between;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
 `;
 
@@ -263,7 +263,7 @@ const RemakePerfumeContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 40px;
+  margin-top: 10px;
 `;
 
 const RemakePerfumeButton = styled.button`
@@ -276,6 +276,7 @@ const RemakePerfumeButton = styled.button`
   border: none;
   border-radius: 8px;
   padding: 10px;
+  margin-bottom: 10px;
 `;
 
 

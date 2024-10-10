@@ -14,14 +14,15 @@ const ModalWrapper = styled.div`
   left: 50%;
   transform: translate(-50%, -50%);
   margin-left: 50px;
-  background-color: #FFECE3;
+  background-color: #FFFFFF;
   padding: 20px;
-  border-radius: 40px;
+  border-radius: 8px;
   z-index: 999;
-  width: 600px;
+  width: 550px;
   height: 400px;
   box-sizing: border-box;
   overflow: hidden;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
 `;
 
 const CloseButton = styled.button`
@@ -117,11 +118,17 @@ const ContentTitle = styled.div`
   color: black;
   display: flex;
   flex-direction: row;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 10px;
 `;
 
-const Pink = styled.div`
-  color: #F28482;
+const PointColor = styled.div`
+  justify-content: center;
+  align-items: center;
+  font-family: "Pretendard-SemiBold";
+  color: #00656D;
+  margin: 0;
 `;
 
 const ContentContainer = styled.div`
@@ -146,7 +153,7 @@ const BuddyRole = styled.div`
 const BuddyName = styled.div`
   display: flex;
   font-size: 16px;
-  font-family: "Pretendard-regular";
+  font-family: "Pretendard-Bold";
 `;
 
 const RatingContainer = styled.div`
@@ -170,19 +177,25 @@ const Img = styled.img`
   margin-right: 5px;
 `;
 
+const ButtonContainer = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
 const Button = styled.button`
   background-color: white;
-  border: 3px solid #F28482;
+  border: 3px solid #00656D;
   border-radius: 10px;
   cursor: pointer;
   font-size: 14px;
   width: 120px;
   height: 40px;
   font-weight: bold;
-  margin-top: 30px;
 
   &:hover {
-  background-color: #F28482;
+  background-color: #00656D;
   border-color: #ffffff;
   color: #ffffff;
   }
@@ -230,7 +243,7 @@ const RatingModal = ({ onClose }) => {
           <RightContent>
             <ContentTitle>
               방금 제작한&nbsp;
-              <Pink>향수</Pink>를 평가해주세요!!
+              <PointColor>향수</PointColor>를 평가해주세요!!
             </ContentTitle>
             <ContentContainer>
               <BuddyNameContainer>
@@ -254,12 +267,14 @@ const RatingModal = ({ onClose }) => {
                   />
                 ))}
               </Stars>
-              <Button className="save-button" onClick={onClose}>
-                평가 완료
-              </Button>
             </RatingContainer>
           </RightContent>
         </Container>
+        <ButtonContainer>
+          <Button className="save-button" onClick={onClose}>
+            평가 완료
+          </Button>
+        </ButtonContainer>
       </Content>
     </ModalWrapper>
   );
