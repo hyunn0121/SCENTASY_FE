@@ -400,34 +400,16 @@ const ChattingPage = () => {
         throw new Error('No access token found');
       }
 
-      const url = `${process.env.REACT_APP_API_KEY}/api/perfume/recipe`;
+      const response = await apiClient.post('/api/perfume/recipe');
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
+      const { code, data } = response.data;
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`응답 실패 - Status: ${response.status}, Text: ${errorText}`);
-      }
-
-      const responseData = await response.json();
-      console.log('응답 데이터:', responseData);
-
-      const { code, data } = responseData;
-      const notes = data.notes;
-
-      if (code === "0000" && notes) {
-        console.log("향수 레시피 생성 성공:", notes);
-        setPerfumeRecipe(notes);
+      if (code === "0000" && data) {
+        console.log("향수 레시피 생성 성공:", data);
+        setPerfumeRecipe(data);
         alert("향수 레시피 생성이 완료되었습니다!");
       } else {
-        throw new Error(`Error from server: ${responseData.message}`);
+        throw new Error(`Error from server: ${response.data.message}`);
       }
 
     } catch (error) {
