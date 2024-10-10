@@ -765,18 +765,6 @@ const CalendarPage = () => {
     }
 
     try {
-      const accessToken = localStorage.getItem('accessToken');
-
-      /*
-      const response = await fetch(`${process.env.REACT_APP_API_KEY}/api/perfume/${selectedPerfumeId}`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      });
-      */
-
       const response = await apiClient.get(`/api/perfume/${selectedPerfumeId}`);
 
       const data = await response.data;
