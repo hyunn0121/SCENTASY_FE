@@ -375,7 +375,7 @@ const ChattingPage = () => {
 
           setResponseCount((prevCount) => {
             const newCount = prevCount + 1;
-            if (newCount >= 3) {
+            if (newCount >= 5) {
               setShowPopup(true);
             }
             return newCount;
@@ -559,7 +559,7 @@ useEffect(() => {
         isVisible={isLoadingModalVisible}
         onClose={() => setIsLoadingModalVisible(false)} 
       />
-      {isRatingModalVisible && <RatingModal onClose={handleCloseRatingModal} />} {/* RatingModal 렌더링 */}
+      {isRatingModalVisible && <RatingModal recipe={perfumeRecipe} onClose={handleCloseRatingModal} />} {/* RatingModal 렌더링 */}
     </ChatContainer>
   );
 };
