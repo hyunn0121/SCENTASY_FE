@@ -201,7 +201,7 @@ const Button = styled.button`
   }
 `;
 
-const RatingModal = ({ onClose }) => {
+const RatingModal = ({ recipe, onClose }) => {
 
   const [smell, setRating] = useState(0);
 
@@ -226,12 +226,13 @@ const RatingModal = ({ onClose }) => {
     <ModalWrapper>
       <CloseButton onClick={handleCancelStar}>X</CloseButton>
       <Content>
+        {/** 
         <DateContainer>
           <SmallIcon src={ic_calendar} alt="calendar" />
           <ProfileText>
             2024-08-31
           </ProfileText>
-        </DateContainer>
+        </DateContainer> */}
         <TitleContainer>
           <TitleContent>나만의 향수 평가하기</TitleContent>
           <Underline />
@@ -248,7 +249,7 @@ const RatingModal = ({ onClose }) => {
             <ContentContainer>
               <BuddyNameContainer>
                 <BuddyRole>향수 이름</BuddyRole>
-                <BuddyName>Happy Birthday!</BuddyName>
+                <BuddyName>{recipe.title}</BuddyName>
               </BuddyNameContainer>
               <BuddyNameContainer>
                 <BuddyRole>별점</BuddyRole>

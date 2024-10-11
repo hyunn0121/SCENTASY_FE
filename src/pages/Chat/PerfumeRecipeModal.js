@@ -128,14 +128,19 @@ const PerfumeRecipeModal = ({ recipe, onClose, onMake }) => {
 
       const response = await apiClient.get(`/api/perfume/device/${perfumeId}`);
 
+      console.log('향수 만들기 api 요청 성공', response.data);
+      alert('향수 만들기 성공');
+      onMake();
+
+      /*
       if (response.code === '0000') {
         console.log('향수 만들기 api 요청 성공', response.data);
         alert('향수 만들기 성공');
         onMake(); // 로딩 모달 띄우기
       } else {
         throw new Error('향수 만들기 오류 : ', response.statusText);
-      }
-    } catch (error) {
+      } */
+    }  catch (error) {
       console.error('향수 만들기 요청 실패 :', error);
       alert('향수 만들기 요청이 실패했습니다. 잠시 후 다시 시도해주세요.');
     }
