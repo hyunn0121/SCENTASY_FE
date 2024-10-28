@@ -15,6 +15,7 @@ import { ExtraInfoProvider } from './contexts/ExtraInfoContext';
 import CalendarPage from './pages/Calendar/CalendarPage';
 import Mypage from './pages/Mypage/Mypage';
 import CommunityPage from './pages/Community/CommunityPage';
+import WritePost from './pages/Community/WrtiePost';
 import ChangeAddInfoPage from './pages/Mypage/ChangeAddInfoPage';
 import ChangelikeScentPage from './pages/Mypage/ChangelikeScentPage';
 import ChangeunlikeScentPage from './pages/Mypage/ChangeunlikeScentPage';
@@ -31,6 +32,7 @@ function App() {
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/community" element={<CommunityPage />} />
+            <Route path="/writePost" element={<WritePost />} />
             <Route path="/mypage" element={<Mypage/>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />

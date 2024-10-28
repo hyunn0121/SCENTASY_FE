@@ -104,6 +104,10 @@ const InputArea = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  ${({ disabled }) => disabled && `
+    pointer-events: none; // 입력 영역 클릭 비활성화
+    opacity: 0.5; // 흐림 효과
+  `}
 `;
 
 const Input = styled.textarea`
@@ -268,11 +272,12 @@ const PopupButton = styled.button`
 `;
 
 const ChattingPage = () => {
+  const [sessionId, setSessionId] = useState(null);
+  const [chatList, setChatList] = useState([]);
   const [userProfile, setUserProfile] = useState(default_profile_iamge);
   const [messages, setMessages] = useState({});
   const [input, setInput] = useState('');
   const [selectedChat, setSelectedChat] = useState(null);
-  const [chatList, setChatList] = useState([]);
   const [responseCount, setResponseCount] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
   const [popupPersistent, setPopupPersistent] = useState(true);
@@ -311,6 +316,85 @@ const ChattingPage = () => {
     fetchUserProfile();
   }, []);
 
+  // 채팅 목록 세션 id 조회
+  useEffect(() => {
+    const fetchChatSessions = async () => {
+      try {
+        const response = await apiClient.get('/api/chats/sessions');
+        const { code, data } = response.data;
+
+        if (code === '0000') {
+          setChatList(data);
+        }  else {
+          console.error('채팅 목록 불러오기 실패', response.data.message);
+        }
+      } catch (error) {
+        console.error('채팅 목록 불러오는 중 오류 발생', error);
+      }
+    };
+    fetchChatSessions();
+  }, []);
+
+  // 특정 세션 클릭 -> 채팅 기록 조회
+  const handleChatItemClick = async (sessionId) => {
+    setSelectedChat(sessionId); // 선택한 목록의 세션 id 설정
+
+    try {
+      const response = await apiClient.get(`/api/chats/sessions/${sessionId}`);
+      const { code, data} = response.data;
+
+      if (code === '0000') {
+        // 서버로부터 받은 데이터를 메시지 형식으로 변환
+        const sessionMessages = data.flatMap((chat) => ([
+          {
+            text: chat.input,
+            isUser: true,
+            time: chat.createdAt
+          },
+          {
+            text: chat.response,
+            isUser: false,
+            time: chat.createdAt
+          }
+        ]));
+  
+        // 기존 메시지 유지하면서 새 메시지 추가
+        setMessages((prevMessages) => ({
+          ...prevMessages,
+          [sessionId]: sessionMessages
+        }));
+      } else {
+        console.error('채팅 목록 메세지 불러오기 실패', response.data.message);
+      }
+    } catch (error) {
+      console.error('채팅 목록을 불러오는 중 오류 발생', error);
+    }
+  };
+
+  // 새로운 채팅 세션 id
+  const handleNewChat = async () => {
+    try {
+      const nickname = localStorage.getItem('nickname');
+      const response= await apiClient.post('/api/chats/new-session');
+      const { data } = response;
+
+      if (data.code === '0000') {
+        const newSessionId = data.data;
+        setSessionId(newSessionId);
+
+        // 새 채팅방 생성 & 목록 추가
+        const newChat = { id: newSessionId, name: `${nickname}: ${data.data}`};
+        setChatList([...chatList, newChat]);
+        setSelectedChat(newChat.id);
+      } else {
+        throw new Error(`새 채팅 세션 만들기 실패: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('새 채팅 세션 생성 중 오류 발생:', error);
+    }
+  };
+
+  // 채팅 api
   useEffect(() => {
     if (messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -318,31 +402,49 @@ const ChattingPage = () => {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (input.trim()) {
-      const newMessage = {
-        text: input,
-        isUser: true,
-        time: new Date().toLocaleTimeString()
-      };
-  
-      let currentChatId = selectedChat;
-  
-      if (currentChatId === null) {
-        currentChatId = chatList.length;
-        setChatList([...chatList, { id: currentChatId, name: `Chat ${currentChatId + 1}` }]);
-        setSelectedChat(currentChatId);
+    if (!input.trim()) return;
+
+    // 첫 채팅 시 세션 없을 때 새로운 세션 먼저 생성
+    if (!selectedChat) {
+      try {
+        const nickname = localStorage.getItem('nickname');
+        const response = await apiClient.post('/api/chats/new-session');
+        const { code, data } = response.data;
+
+        if (code === '0000') {
+          const newSessionId = data;
+          setSessionId(newSessionId);
+          setSelectedChat(newSessionId);
+
+          const newChat = { sessionId: newSessionId, name: `${nickname} : ${newSessionId}`};
+          setChatList([...chatList, newChat]);
+          return;
+
+        } else {
+          throw new Error(`새 채팅 세션 만들기 실패: ${data.message}`);
+        }
+      } catch (error) {
+        console.error('새 채팅 세션 생성 중 오류 발생: ', error);
+        return; // 세선 생성 실패 -> 메세지 전송 X
       }
-  
+    }
+
+    // 세션 생성 성공 -> 메시지 전송
+    const newMessage = {
+      text: input,
+      isUser: true,
+      time: new Date().toLocaleTimeString()
+    };
+
       const newMessages = { ...messages };
-      newMessages[currentChatId] = newMessages[currentChatId]
-        ? [...newMessages[currentChatId], newMessage]
+      newMessages[sessionId] = newMessages[sessionId]
+        ? [...newMessages[sessionId], newMessage]
         : [newMessage];
   
       setMessages(newMessages);
       setInput('');
 
       try {
-
         const accessToken = localStorage.getItem('accessToken');
         const memberId = localStorage.getItem('memberId');
 
@@ -353,13 +455,12 @@ const ChattingPage = () => {
         if (!memberId) {
           throw new Error('No access token found');
         }
-
-        const url = `/api/chats/${memberId}`;
-
-        const response = await apiClient.post(url, { input });
+        const response = await apiClient.post(`/api/chats/${selectedChat}`, { input }, {
+          params: { memberId },
+        });
   
         // 응답에서 code와 data를 추출
-      const { code, data } = response.data;
+        const { code, data } = response.data;
 
       // code가 성공 상태인 경우에만 처리
       if (code === "0000") {
@@ -370,13 +471,14 @@ const ChattingPage = () => {
             time: new Date().toLocaleTimeString(),
           };
 
-          newMessages[currentChatId].push(botMessage);
+          newMessages[selectedChat].push(botMessage);
           setMessages({ ...newMessages });
 
           setResponseCount((prevCount) => {
             const newCount = prevCount + 1;
             if (newCount >= 5) {
               setShowPopup(true);
+              setIsInputDisabled(true); // 입력 비활성화
             }
             return newCount;
           });
@@ -388,8 +490,14 @@ const ChattingPage = () => {
     } catch (error) {
       console.error('Error sending message:', error);
     }
-    }
   };
+
+  // selectedChat이 설정되면 메시지 전송을 트리거하는 useEffect
+  useEffect(() => {
+    if (selectedChat && input.trim()) {
+      handleSendMessage();
+    }
+  }, [selectedChat]);  // selectedChat이 변경될 때마다 트리거
 
   // 향수 레시피 서버 요청
   const generatePerfumerRecipe = async () => {
@@ -400,7 +508,7 @@ const ChattingPage = () => {
         throw new Error('No access token found');
       }
 
-      const response = await apiClient.post('/api/perfume/recipe');
+      const response = await apiClient.post(`/api/perfume/recipe/${sessionId}`);
 
       const { code, data } = response.data;
 
@@ -444,11 +552,11 @@ useEffect(() => {
     setIsInputDisabled(false);
   };
 
-  const handleNewChat = () => {
-    const newChat = { id: chatList.length, name: `Chat ${chatList.length + 1}` };
-    setChatList([...chatList, newChat]);
-    setSelectedChat(newChat.id);
-  };
+  // const handleNewChat = () => {
+  //   const newChat = { id: chatList.length, name: `Chat ${chatList.length + 1}` };
+  //   setChatList([...chatList, newChat]);
+  //   setSelectedChat(newChat.id);
+  // };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -457,12 +565,9 @@ useEffect(() => {
     }
   };
 
-  const handleChatItemClick = (index) => {
-    setSelectedChat(index);
-  };
-
   const handleOpenPerfumeRecipeModal = async () => {
     setShowPopup(false); // 팝업 버튼 2개 닫기
+    setIsInputDisabled(false);
 
     await generatePerfumerRecipe();
 
@@ -485,6 +590,7 @@ useEffect(() => {
 
   const handleCloseRatingModal = () => {
     setIsRatingModalVisible(false); // RatingModal 닫기 함수 추가
+    setIsInputDisabled(true);
     alert("향수 평가가 완료되었습니다!\n해당 평가는 다음 향수 제작에 활용됩니다.")
   };
 
@@ -498,11 +604,11 @@ useEffect(() => {
           </NewChatButtonContainer>
           {chatList.map((chat) => (
             <ChatItem
-              key={chat.id}
-              isSelected={selectedChat === chat.id}
-              onClick={() => handleChatItemClick(chat.id)}
+              key={chat.sessionId}
+              isSelected={selectedChat === chat.sessionId}
+              onClick={() => handleChatItemClick(chat.sessionId)}
             >
-              <ChatItemText>{chat.name}</ChatItemText>
+              <ChatItemText>{chat.sessionId}</ChatItemText>
             </ChatItem>
           ))}
         </Sidebar>

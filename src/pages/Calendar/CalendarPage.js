@@ -9,7 +9,7 @@ import MemoDetailModal from "../Perfume/MemoDetailModal";
 
 import { ko } from 'date-fns/locale'; 
 
-import backgroundImage2 from '../../assets/images/img_onboarding2.png';
+import backgroundImage1 from '../../assets/images/img_onboarding1.png';
 import example_profile from '../../assets/images/example_profile.jpg';
 import default_profile_img from '../../assets/images/default_profile_image.png';
 import arc_text from '../../assets/images/calendar_arc_text.png';
@@ -782,7 +782,7 @@ const CalendarPage = () => {
   };
 
   return (
-    <Page backgroundImage={backgroundImage2}>
+    <Page backgroundImage={backgroundImage1}>
       <ContentContainer>
         <ProfileContainer>
           <CircleWrapper>
