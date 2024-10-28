@@ -306,7 +306,7 @@ const RemakePerfumeButton = styled.button`
 const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
 
   const [isTooltipVisible, setTooltipVisible] = useState(false);
-  const { title, description, accords, notes } = perfumeDetail;
+  const { id, title, description, accords, notes } = perfumeDetail;
   console.log("향수 상세정보: ", description);
 
   const [noteImages, setNoteImages] = useState([]);
@@ -376,7 +376,7 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
   // 향조 배열 개수 -> 균등 비율
   const accordsCount = accords.length;
   const percentage = 100 / accordsCount;
-  const colors =['#4bc0c0', '#ffcd56', '#ff6384', '#36a2eb', '#9966ff'];
+  const colors =['#4bc0c0', '#ffcd56', '#ff6384', '#36a2eb', '#9966ff', '#45D777'];
 
   const accordsData = perfumeDetail.accords;
   // 전체 합 계산
@@ -395,6 +395,27 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
         borderWidth: 1,
       },
     ],
+  };
+
+  // 향수 만들기 버튼 클릭
+  const handlePerfumeMakeClick = async () => {
+    try {
+      const perfumeId = perfumeDetail.perfumeId;
+      // const perfumeId = 1;
+
+      if (!perfumeId) {
+        throw new Error('향수 ID가 없습니다.');
+      }
+
+      const response = await apiClient.get(`/api/perfume/device/${perfumeId}`);
+      
+      console.log("향수 id: ", perfumeDetail.perfumeId);
+      console.log('향수 만들기 api 요청 성공', response.data);
+      alert('향수 만들기 성공');
+    } catch (error) {
+      console.error('향수 만들기 요청 실패 :', error);
+      alert('향수 만들기 요청이 실패했습니다. 잠시 후 다시 시도해주세요.');
+    }
   };
 
   return (
@@ -487,7 +508,7 @@ const PerfumeDetailModal = ({ closeModal, perfumeDetail }) => {
           </ChartContainer>
         </ChartContentContainer>
         <RemakePerfumeContainer>
-          <RemakePerfumeButton>향수 만들기</RemakePerfumeButton>
+          <RemakePerfumeButton onClick={handlePerfumeMakeClick}>향수 만들기</RemakePerfumeButton>
         </RemakePerfumeContainer>
       </ModalContent>
     </ModalOverlay>
