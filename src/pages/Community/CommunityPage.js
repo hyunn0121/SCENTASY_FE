@@ -1,4 +1,5 @@
 import { React, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css"; 
@@ -436,6 +437,7 @@ const MyPostListContent = styled.div`
 
 const CommunityPage = () => {
 
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("글");
   const [activeTab, setActiveTab] = useState("내 글 목록");
@@ -532,6 +534,10 @@ const CommunityPage = () => {
       default:
         return <MyPostTab />;
     }
+  };
+
+  const handleWritePostClick = () => {
+    navigate('/writePost');
   };
 
   return (
@@ -639,7 +645,7 @@ const CommunityPage = () => {
               <PostHour>dodo@naver.com</PostHour>
             </WriterInfoContent>
           </MyInfoProfileContainer>
-          <WritePostButton>글 작성하기</WritePostButton>
+          <WritePostButton onClick={handleWritePostClick}>글 작성하기</WritePostButton>
           <TabButtonContainer>
             <TabButton active={activeTab === "MyPost"} onClick={() => setActiveTab("MyPost")}>내 글 목록</TabButton>
             <TabButton active={activeTab === "MyComment"} onClick={() => setActiveTab("MyComment")}>내 댓글 목록</TabButton>
