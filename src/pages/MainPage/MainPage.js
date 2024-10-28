@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled, { createGlobalStyle, keyframes } from 'styled-components';
 
-import backgroundImage from '../../assets/images/img_onboarding.png';
+import TypingTextContainer from './TypingTextContainer';
+import backgroundImage1 from '../../assets/images/img_onboarding1.png';
 import backgroundImage2 from '../../assets/images/img_onboarding2.png';
 import backgroundImage3 from '../../assets/images/img_onboarding3.png';
 
+import onboarding_perfumeQuestion from '../../assets/images/ic_onboarding_perfumeQuestion.png';
+import onboarding_person from '../../assets/images/ic_onboarding_person.png';
 import onboarding_userChat from '../../assets/images/ic_onboarding_user.png';
 import onboarding_Chatbot from '../../assets/images/ic_onboarding_chatbot.png';
+
 
 const GlobalStyle = createGlobalStyle`
     html, body {
@@ -14,6 +19,7 @@ const GlobalStyle = createGlobalStyle`
     padding: 0;
     height: 100%;
     overflow-x: hidden;
+    overflow-y: auto; /* 스크롤 O */
     }
 `;
 
@@ -72,7 +78,7 @@ const MainContent = styled.div`
     background-attachment: fixed; /* 배경 고정으로 parallax 효과 */
 
     width: 100vw;
-    height: 100vh; 
+    min-height: 100vh
 `;
 
 const Title = styled.h1`
@@ -91,6 +97,44 @@ const Content = styled.p`
     text-align: center;
     opacity: ${props => (props.isVisible ? 1 : 0)};
     transition: opacity 1s ease-in-out;
+`;
+
+const StyledTypingTextContainer = styled.div`
+    width: 100vw;
+    height: auto;
+    min-height: 200px;
+    margin-top: 100px;
+    font-size: 36px;
+    text-align: center;
+    opacity: ${props => (props.isVisible ? 1 : 0)};
+    transition: opacity 1s ease-in-out;
+    z-index: 10;
+`;
+
+const PerfumeQuestionContainer = styled.div`
+    width: 100vw;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    margin-top: 100px;
+`;
+
+const PerfumeQuestion = styled.img`
+    width: 550px;
+    height: 130px;
+    justify-content: center;
+    align-items: center;
+    opacity: ${props => (props.isVisible ? 1 : 0)};
+    transition: opacity 1s ease-in-out; /* 흐림-선명 효과 */
+`;
+
+const PerfumePerson = styled.img`
+    width: 1000px;
+    height: 460px;
+    justify-content: center;
+    align-items: center;
+    opacity: ${props => (props.isVisible ? 1 : 0)};
+    transition: opacity 1s ease-in-out; /* 흐림-선명 효과 */
 `;
 
 const ChatSection = styled.section`
@@ -146,14 +190,33 @@ const ChatContainer = styled.div`
 
 const MainPage = () => {
 
-    const [currentImage, setCurrentImage] = useState(backgroundImage);
+    const [currentImage, setCurrentImage] = useState(backgroundImage1);
     const [isTitleVisible, setIsTitleVisible] = useState(true);
-    const images = [backgroundImage, backgroundImage2, backgroundImage3];
+    const [isTypingTextVisible, setIsTypingVisible] = useState(false);
+    const [isQuestionVisible, setIsQuestionVisible] = useState(false);
+    const images = [backgroundImage1, backgroundImage2, backgroundImage3];
     let currentIndex = 0;
+    const typingTextRef = useRef(null);
+    const questionImageRef = useRef(null);
 
     const userChatRef = useRef(null);
     const chatbotRef = useRef(null);
 
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollPosition = window.scrollY;
+            if (scrollPosition > 500) {
+                navigate('/about');
+            } else {
+                navigate('/');
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [navigate]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -162,6 +225,28 @@ const MainPage = () => {
         }, 2000); // 2초마다 이미지 변경
 
         return () => clearInterval(interval); // 컴포넌트가 언마운트될 때 인터벌을 정리
+    }, []);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        console.log("타이핑 텍스트 표시 시작!");
+                        setIsTypingVisible(true);
+                    } else {
+                        setIsTypingVisible(false);
+                    }
+                });
+            },
+            { threshold: 0.5 }
+        );
+
+        if (typingTextRef.current) observer.observe(typingTextRef.current);
+
+        return () => {
+            if (typingTextRef.current) observer.unobserve(typingTextRef.current);
+        };
     }, []);
 
     useEffect(() => {
@@ -187,6 +272,27 @@ const MainPage = () => {
         return () => {
             if (userChatRef.current) observer.unobserve(userChatRef.current);
             if (chatbotRef.current) observer.unobserve(chatbotRef.current);
+        };
+    })
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        setIsQuestionVisible(true);
+                    } else {
+                        setIsQuestionVisible(false);
+                    }
+                });
+            },
+            { threshold: 0.5 }
+        );
+
+        if (questionImageRef.current) observer.observe(questionImageRef.current);
+
+        return () => {
+            if (questionImageRef.current) observer.unobserve(questionImageRef.current);
         };
     }, []);
 
@@ -215,12 +321,24 @@ const MainPage = () => {
             <Content isVisible={isTitleVisible}>Chat, Create, and<br/>Wear Your Scent</Content>
         </MainContent>
 
+        {/* 타이핑 텍스트 */}
+        <StyledTypingTextContainer isVisible={isTypingTextVisible} ref={typingTextRef}>
+            {isTypingTextVisible && <TypingTextContainer/>}
+        </StyledTypingTextContainer>
+
+        <PerfumeQuestionContainer ref={questionImageRef}>
+            <PerfumeQuestion
+                src={onboarding_perfumeQuestion}
+                isVisible={isQuestionVisible}
+                alt="Perfume Question" />
+        </PerfumeQuestionContainer>
+
+        
         {/* 스크롤할 때 채팅 버블이 보이도록 하는 부분 */}
         <ChatSection>
             <ChatBubbleImage ref={userChatRef} src={onboarding_userChat} isUser={true} />
             <ChatBubbleImage ref={chatbotRef} src={onboarding_Chatbot} isUser={false} />
         </ChatSection>
-
         {/* 더 많은 채팅 메시지와 섹션을 추가할 수 있습니다 */ }
         </>
     );
