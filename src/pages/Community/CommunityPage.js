@@ -1,4 +1,4 @@
-import { React, useState } from "react";
+import { React, useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
 import Slider from "react-slick";
@@ -15,6 +15,7 @@ import ic_comment from '../../assets/images/ic_comment.png';
 import ic_3dot from '../../assets/images/ic_3dot.png';
 import MyPostTab from "./MyPostTab";
 import MyCommentTab from "./MyCommentTab";
+import apiClient from "../Auth/TokenReissue";
 
 
 const MainContainer = styled.div`
@@ -110,6 +111,7 @@ const Top3PostContainer = styled.div`
 
 const Top3PostCard = styled.div`
   width: 400px;
+  max-height: 400px;
   padding: 20px;
   background-color: #ffffff;
   border-radius: 30px;
@@ -441,35 +443,52 @@ const CommunityPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("글");
   const [activeTab, setActiveTab] = useState("내 글 목록");
-  const title = "면접날 향수 꿀조합 공유합니다! (바닐라 베이스)";
-  const content = "면접날 너무 긴장되는 마음을 릴렉스하면서, 또 너무 강렬하지 않고 은은한 향수를 만들어 보았습니다! 바닐라 베이스에 우디한 향을 조금 넣어 은은한 향을 강조해주었어요~! 이거 뿌리고 면접에 착 붙었습니다 ^0^ 도움이 되실까 글을 적어봅니다 꿀조합 👍🏻 면접 합격 향수 만들기 위해서는 ..."
 
-  const posts = [
-    {
-      id: 1,
-      nickname : "도도입니다",
-      title: "향수 포스트 1.",
-      content: "나는 <그대들 도대체 왜 그러고 사는가>에 등장하는 왜가리 캐릭터의 성우가 스다 마사키일 것이라곤 전혀 생각도 못했다. 스다고 그렇게 쓰는 사람은 처음 봤다. 집에 와서 예고편을 다시 틀어보고 왜가리의 음성이...",
-      liked: true,
-      Profileimage: "https://example.com/image1.jpg"
-    },
-    {
-      id: 2,
-      nickname : "도도입니다",
-      title: "향수 포스트 2",
-      content: "“그대를 언제까지 그리고 살 건가”...",
-      liked: false,
-      Profileimage: "https://example.com/image2.jpg"
-    },
-    {
-      id: 3,
-      nickname : "도도입니다",
-      title: "향수 포스트 3",
-      content: "“그대를 언제까지 그리고 살 건가”...",
-      liked: false,
-      Profileimage: "https://example.com/image3.jpg"
-    }
-  ];
+  const [postTopList, setPostTopList] = useState([]);
+  const [postList, setPostList] = useState([]);
+
+  useEffect(() => {
+    const fetchPostTopListData = async () => {
+      try {
+        const response = await apiClient.get(`/api/posts/list-top3`);
+        console.log(`인기 포스트 조회: ${response}`);
+
+        if (response.status === 200) {
+          const { code, data } = response.data;
+
+          if (code === '0000') {
+            setPostTopList(data);
+          }
+        }
+      } catch(error) {
+        console.log('인기 포스트 목록을 불러오는 중 오류 발생', error);
+      }
+    };
+
+    fetchPostTopListData();
+  }, []);
+
+  // 글 목록 조회
+  useEffect(() => {
+    const fetchPostListData = async () => {
+      try {
+        const response = await apiClient.get(`/api/posts/list`);
+
+        if (response.status === 200) {
+          const { code, data } = response.data;
+
+          if (code === '0000') {
+            setPostList(data);
+            console.log(`포스트 리스트 조회: ${data}`);
+          }
+        }
+      } catch (error) {
+        console.error('포스트 목록을 불러오는 중 오류 발생', error);
+      }
+    };
+
+    fetchPostListData();
+  }, []);
 
   // 캐로셀 설정
   const settings = {
@@ -572,14 +591,14 @@ const CommunityPage = () => {
         <SectionTitle>현재 인기있는 포스트</SectionTitle>
       </TitleContainer>
       <Top3PostContainer>
-        {posts.map(post => (
+        {postTopList.map(post => (
           <Top3PostCard>
           <PostHeader>
             <UserInfo>
-              <PostImage src={example_profile} alt="Use Profile" />
+              <PostImage src={post.imageUrl} alt="Writer Profile" />
               <PostUserNickname>{post.nickname}</PostUserNickname>
             </UserInfo>
-            <HeartIcon src={ic_like} />
+            <HeartIcon src={ic_unlike} />
           </PostHeader>
           <PostTitle>{post.title}</PostTitle>
           <PostContent>{post.content}</PostContent>
@@ -615,26 +634,33 @@ const CommunityPage = () => {
       </TitleContainer>
       <PostAndUserContainer>
         <PostListContainer>
-          <PostItemContainer>
+        {postList.map((post, index) => (
+          <PostItemContainer
+            key={index}
+            onClick={() => navigate(`/detailPost`)}
+            // onClick={() => navigate(`/detailPost/${post.postId}`)}
+          >
             <PostTopContainer>
               <WriterInfoContainer>
-                <WriterImage src={example_profile}/>
+                <WriterImage src={post.imageUrl} alt="Writer Profile" />
                 <WriterInfoContent>
-                  <WriterNickname>dodo</WriterNickname>
-                  <PostHour>2024-10-05</PostHour>
+                  <WriterNickname>{post.nickname}</WriterNickname>
+                  <PostHour>{new Date(post.createdAt).toLocaleDateString()}</PostHour>
                 </WriterInfoContent>
               </WriterInfoContainer>
               <PostSettingIcon src={ic_3dot}/>
             </PostTopContainer>
-            <PostItemTitle>{title}</PostItemTitle>
-            <PostItemContent>{content}</PostItemContent>
+
+            <PostItemTitle>{post.title}</PostItemTitle>
+            <PostItemContent>{post.content}</PostItemContent>
             <PostExtraInfoContainer>
-              <PostExtraInfoIcon src={ic_unlike}/>
-              <PostExtraInfoText>20</PostExtraInfoText>
-              <PostExtraInfoIcon src={ic_comment}/>
-              <PostExtraInfoText>155</PostExtraInfoText>
-          </PostExtraInfoContainer>
+              <PostExtraInfoIcon src={ic_unlike} alt="Like" />
+              <PostExtraInfoText>{post.likeCount}</PostExtraInfoText>
+              <PostExtraInfoIcon src={ic_comment} alt="Comment" />
+              <PostExtraInfoText>{post.commentCount}</PostExtraInfoText>
+            </PostExtraInfoContainer>
           </PostItemContainer>
+        ))}
         </PostListContainer>
 
         <MyInfoContainer>

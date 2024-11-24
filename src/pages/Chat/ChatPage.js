@@ -476,7 +476,7 @@ const ChattingPage = () => {
 
           setResponseCount((prevCount) => {
             const newCount = prevCount + 1;
-            if (newCount >= 5) {
+            if (newCount >= 1) {
               setShowPopup(true);
               setIsInputDisabled(true); // 입력 비활성화
             }

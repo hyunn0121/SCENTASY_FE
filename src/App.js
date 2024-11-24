@@ -16,6 +16,7 @@ import CalendarPage from './pages/Calendar/CalendarPage';
 import Mypage from './pages/Mypage/Mypage';
 import CommunityPage from './pages/Community/CommunityPage';
 import WritePost from './pages/Community/WrtiePost';
+import DetailPost from './pages/Community/DetailPost';
 import ChangeAddInfoPage from './pages/Mypage/ChangeAddInfoPage';
 import ChangelikeScentPage from './pages/Mypage/ChangelikeScentPage';
 import ChangeunlikeScentPage from './pages/Mypage/ChangeunlikeScentPage';
@@ -33,6 +34,7 @@ function App() {
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/writePost" element={<WritePost />} />
+            <Route path="/detailPost" element={<DetailPost />} />
             <Route path="/mypage" element={<Mypage/>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />
