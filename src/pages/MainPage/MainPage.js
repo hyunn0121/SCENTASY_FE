@@ -97,6 +97,19 @@ const Content = styled.p`
     text-align: center;
     opacity: ${props => (props.isVisible ? 1 : 0)};
     transition: opacity 1s ease-in-out;
+    font-family: "Montserrat-Regular";
+    margin: 0 0 10px 0;
+`;
+
+const ScentIntroButton = styled.p`
+    font-size: 16px; /* 폰트 크기를 조정 */
+    text-align: center;
+    opacity: ${props => (props.isVisible ? 1 : 0)};
+    transition: opacity 1s ease-in-out;
+    font-family: "Pretendard-SemiBold";
+    text-decoration: underline;
+    color: #00656D;
+    margin: 0;
 `;
 
 const StyledTypingTextContainer = styled.div`
@@ -312,13 +325,17 @@ const MainPage = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const handleScentIntro = () => {
+        navigate('/scentIntro');
+    };
 
     return (
         <>
         <GlobalStyle />
         <MainContent backgroundImage={currentImage}>
-            <Title isVisible={isTitleVisible}>꿈꿔왔던 나만의 향을 실현해 주는<br/> AI 향수 조향사<Scentasy> Scentasy</Scentasy></Title>
+            <Title isVisible={isTitleVisible}>꿈꿔왔던 나만의 향을 실현해 주는<br/> AI 향수 조향사<Scentasy onClick={handleScentIntro}> Scentasy</Scentasy></Title>
             <Content isVisible={isTitleVisible}>Chat, Create, and<br/>Wear Your Scent</Content>
+            <ScentIntroButton onClick={handleScentIntro} isVisible={isTitleVisible}>향료가 더 궁금하시다면?</ScentIntroButton>
         </MainContent>
 
         {/* 타이핑 텍스트 */}

@@ -20,6 +20,7 @@ import DetailPost from './pages/Community/DetailPost';
 import ChangeAddInfoPage from './pages/Mypage/ChangeAddInfoPage';
 import ChangelikeScentPage from './pages/Mypage/ChangelikeScentPage';
 import ChangeunlikeScentPage from './pages/Mypage/ChangeunlikeScentPage';
+import ScentIntro from './pages/MainPage/ScentIntro';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Routes>
             <Route exact path="/" element={<MainPage />} />
             <Route path="/about" element={<MainPage />} />
+            <Route path="/scentIntro" element={<ScentIntro />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/community" element={<CommunityPage />} />
