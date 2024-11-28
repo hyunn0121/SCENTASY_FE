@@ -1,6 +1,9 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import apiClient from "../Auth/TokenReissue";
+
 
 const MyPerfumeTabContainer = styled.div`
   display: flex;
@@ -47,6 +50,38 @@ const Divider = styled.hr`
 `;
 
 const PerfumeTab = () => {
+
+  const [barData, setBarData] = useState([]);
+
+  useEffect(() => {
+    // Simulating server response
+    const fetchData = async () => {
+      try {
+        const memberId = localStorage.getItem('memberId');
+        const accessToken = localStorage.getItem('accessToken');
+
+        if (!memberId || !accessToken) {
+          console.error('로그인이 필요합니다.');
+          return;
+        }
+
+        const response = await apiClient.get(`/${memberId}/accord-statistics`);
+
+        if (response.status === 200) {
+          const { code, data } = response.data;
+          
+          if (code === '0000') {
+            setBarData(data);
+          }
+        }
+      } catch (error) {
+        console.error('어코드 통계 조회 중 오류 발생', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return(
     <MyPerfumeTabContainer>
       <TitleContainer>
@@ -56,6 +91,14 @@ const PerfumeTab = () => {
       <Divider/>
 
       <MainPerfumeContainer>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <XAxis dataKey="accordName" />
+            <YAxis allowDecimals={false}/>
+            <Tooltip />
+            <Bar dataKey="count" fill="#8884d8" barSize={20} />
+          </BarChart>
+        </ResponsiveContainer>
       </MainPerfumeContainer>
     </MyPerfumeTabContainer>
   )
