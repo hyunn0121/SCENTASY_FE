@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import styled from "styled-components";
+import apiClient from "../Auth/TokenReissue";
 
 import ic_like from '../../assets/images/ic_like.png';
 import ic_unlike from '../../assets/images/ic_unlike.png';
@@ -34,6 +35,7 @@ const PostContent = styled.p`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: left;
 `;
 
 const PostInfoContainer = styled.div`
@@ -72,21 +74,55 @@ const PostHourText = styled.p`
 `;
 
 const MyPostTab = () => {
+
+  const [myPostList, setMyPostList] = useState([]);
+
+  // 내 글 목록
+  useEffect(() => {
+    const fetchMyPostList = async () => {
+
+      const memberId = localStorage.getItem('memberId');
+
+      try {
+        const response = await apiClient.get(`/api/posts/list/${memberId}`);
+        console.log(`멤버별 포스트 조회: ${response}`)
+
+        if (response.status === 200) {
+          const { code, data } = response.data;
+
+          if (code === '0000') {
+            setMyPostList(data);
+          }
+        }
+      } catch (error) {
+        console.log('멤버별 포스트 목록을 불러오는 중 오류 발생', error);
+      }
+    };
+
+    fetchMyPostList();
+  }, []);
+
+  // 내 댓글 목록
+
+
+  
   return (
     <MyPostContainer>
-      <MyPostItemContainer>
-        <PostTitle>나만의 향수 조합</PostTitle>
-        <PostContent>저만의 꿀향수 조합을 공유합니다! 제 취향은 대체로 달달하고 상큼한 취향 ...</PostContent>
+      {myPostList.map((post, index) => (
+        <MyPostItemContainer key={index}>
+        <PostTitle>{post.title}</PostTitle>
+        <PostContent>{post.content}</PostContent>
         <PostInfoContainer>
           <PostExtraInfoContainer>
             <PostExtraInfoIcon src={ic_unlike}/>
-            <PostExtraInfoText>20</PostExtraInfoText>
+            <PostExtraInfoText>{post.likeCount}</PostExtraInfoText>
             <PostExtraInfoIcon src={ic_comment}/>
-            <PostExtraInfoText>155</PostExtraInfoText>
+            <PostExtraInfoText>{post.commentCount}</PostExtraInfoText>
           </PostExtraInfoContainer>
-          <PostHourText>2024. 09. 04</PostHourText>
+          <PostHourText>{post.createdAt}</PostHourText>
         </PostInfoContainer>
       </MyPostItemContainer>
+      ))}
     </MyPostContainer>
   )
 };

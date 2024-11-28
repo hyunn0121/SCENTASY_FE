@@ -446,6 +446,7 @@ const CommunityPage = () => {
 
   const [postTopList, setPostTopList] = useState([]);
   const [postList, setPostList] = useState([]);
+  const [likedPosts, setLikedPosts]  = useState(new Set()); // 좋아요한 postId 저장
 
   useEffect(() => {
     const fetchPostTopListData = async () => {
@@ -468,27 +469,49 @@ const CommunityPage = () => {
     fetchPostTopListData();
   }, []);
 
-  // 글 목록 조회
+  // 전체 게시글 목록 조회 (좋아요 여부 포함)
   useEffect(() => {
-    const fetchPostListData = async () => {
+    const fetchPosts = async () => {
       try {
+        const memberId = localStorage.getItem('memberId');
+        const likeResponse = await apiClient.get(`/api/posts/like-list/${memberId}`);
+        let likedIds = new Set();
+
+        console.log("Like Response:", likeResponse);
+
+        if (likeResponse.status === 200) {
+          const { code, data} = likeResponse.data;
+
+          if (code === '0000') {
+            likedIds = new Set(data.map(post => post.postId));
+            setLikedPosts(likedIds);
+          }
+        }
+
+        // 전체 포스트 리스트 조회
         const response = await apiClient.get(`/api/posts/list`);
 
         if (response.status === 200) {
           const { code, data } = response.data;
 
           if (code === '0000') {
-            setPostList(data);
+            // 좋아요 상태를 기반으로 초기화
+            const updatedPosts = data.map((post) => ({
+              ...post,
+              isLiked: likedIds?.has(post.postId),
+            }));
+            setPostList(updatedPosts);
             console.log(`포스트 리스트 조회: ${data}`);
           }
         }
       } catch (error) {
-        console.error('포스트 목록을 불러오는 중 오류 발생', error);
+        console.log("좋아요한 글 목록을 불러오는 중 오류 발생", error);
       }
-    };
+    }
 
-    fetchPostListData();
+    fetchPosts();
   }, []);
+
 
   // 캐로셀 설정
   const settings = {
@@ -555,8 +578,58 @@ const CommunityPage = () => {
     }
   };
 
+  const handleLikeToggle = async (postId, index) => {
+    try {
+      const memberId = localStorage.getItem('memberId');
+
+      // 좋아요 여부 확인
+      const isLiked = likedPosts.has(postId);
+
+      // 좋아요 요청/삭제 api 호출
+      const response = isLiked
+      ? await apiClient.delete(`/api/posts/delete-postlike/${postId}/${memberId}`)
+      : await apiClient.post(`/api/posts/create-postlike/${postId}/${memberId}`);
+      
+      if (response.status === 200) {
+        const { code } = response.data;
+        
+        if (code ===  '0000') {
+          // 상태 업데이트: 특정 게시글 isLiked 값 토글
+          setLikedPosts((prev) => {
+            const updated = new Set(prev);
+            if (isLiked) {
+              updated.delete(postId);
+            } else {
+              updated.add(postId);
+            }
+            return updated;
+          });
+
+          // likeCount 동기화
+          setPostList((prevList) =>
+            prevList.map((post) => 
+              post.postId === postId
+                ? {
+                  ...post,
+                  likeCount: post.likeCount + (isLiked ? -1 : 1),
+                  isLiked: !isLiked,
+                }
+              : post
+            )
+          );
+        }
+      }
+    } catch (error) {
+      console.log('좋아요 요청 중 오류 발생', error);
+    }
+  };
+
   const handleWritePostClick = () => {
     navigate('/writePost');
+  };
+
+  const handleDetailPostClick = (postId) => {
+    navigate(`/detailPost/${postId}`);
   };
 
   return (
@@ -637,8 +710,8 @@ const CommunityPage = () => {
         {postList.map((post, index) => (
           <PostItemContainer
             key={index}
-            onClick={() => navigate(`/detailPost`)}
-            // onClick={() => navigate(`/detailPost/${post.postId}`)}
+            // onClick={() => navigate(`/detailPost`)}
+            onClick={() => handleDetailPostClick(post.postId)}
           >
             <PostTopContainer>
               <WriterInfoContainer>
@@ -653,8 +726,16 @@ const CommunityPage = () => {
 
             <PostItemTitle>{post.title}</PostItemTitle>
             <PostItemContent>{post.content}</PostItemContent>
+
             <PostExtraInfoContainer>
-              <PostExtraInfoIcon src={ic_unlike} alt="Like" />
+              <PostExtraInfoIcon
+                src={likedPosts.has(post.postId) ? ic_like : ic_unlike}
+                alt="Like"
+                onClick={(e) => {
+                  e.stopPropagation(); // 부모 클릭 방지
+                  handleLikeToggle(post.postId, index);
+                }}
+              />
               <PostExtraInfoText>{post.likeCount}</PostExtraInfoText>
               <PostExtraInfoIcon src={ic_comment} alt="Comment" />
               <PostExtraInfoText>{post.commentCount}</PostExtraInfoText>

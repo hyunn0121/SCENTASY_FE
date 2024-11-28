@@ -36,7 +36,7 @@ function App() {
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/writePost" element={<WritePost />} />
-            <Route path="/detailPost" element={<DetailPost />} />
+            <Route path="/detailPost/:postId" element={<DetailPost />} />
             <Route path="/mypage" element={<Mypage/>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />

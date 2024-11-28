@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import styled from "styled-components";
 
@@ -6,6 +6,7 @@ import ic_unlike from "../../assets/images/ic_unlike.png";
 import ic_like from "../../assets/images/ic_like.png";
 import ic_comment from "../../assets/images/ic_comment.png";
 import example_profile from "../../assets/images/example_profile.jpg";
+import apiClient from "../Auth/TokenReissue";
 
 const MyCommunityTabContainer = styled.div`
   display: flex;
@@ -269,15 +270,8 @@ const LikeItemList = styled.div`
 
 const CommunityTab = () => {
   const [activeTab, setActiveTab] = useState("myPosts");
-
-  const posts = [
-    { id: 1, title: "나만의 향수 조합 공유!", content: "저만의 꿀향수 조합을 공유합니다! 제 취향은 대체로 달달하고 상큼한 취향 ...", likes: 155, comments: 15, date: "2024.09.04", views: 3344 },
-    { id: 2, title: "데일리 향수 추천~!", content: "저만의 데일리 향수 추천!", likes: 200, comments: 20, date: "2024.09.03", views: 4000 },
-    { id: 3, title: "나만의 향수 조합 공유!", content: "저만의 꿀향수 조합을 공유합니다! 제 취향은 대체로 달달하고 상큼한 취향 ...", likes: 155, comments: 15, date: "2024.09.04", views: 3344 },
-    { id: 4, title: "데일리 향수 추천~!", content: "저만의 데일리 향수 추천!", likes: 200, comments: 20, date: "2024.09.03", views: 4000 },
-    { id: 5, title: "나만의 향수 조합 공유!", content: "저만의 꿀향수 조합을 공유합니다! 제 취향은 대체로 달달하고 상큼한 취향 ...", likes: 155, comments: 15, date: "2024.09.04", views: 3344 },
-    { id: 6, title: "데일리 향수 추천~!", content: "저만의 데일리 향수 추천!", likes: 200, comments: 20, date: "2024.09.03", views: 4000 },
-  ]
+  const [myPostList, setMyPostList] = useState([]);
+  const [myLikeList, setMyLikeList] = useState([]);
 
   const commentPost = [
     { id: 1, title: "나만의 향수 조합 공유!", comment: "우와 향수 꿀조합 공유라니! 너무 좋아요!!! xx님의 꿀조합 향수 너무 궁금해서 저도 얼른 만들어봐야겠어요! 언젠가 저도 꿀조합 향수를 찾을 수 있기를 !!!!", nickname: "전세계향수다써볼때까지", date: "2024.09.04", commentCount: 5 },
@@ -293,25 +287,73 @@ const CommunityTab = () => {
     { id: 4, title: "나만의 향수 조합 공유!", content: "저만의 꿀향수 조합을 공유합니다! 제 취향은 대체로 달달하고 상큼한 취향 ...", nickname: "전세계향수다써볼때까지", likes: 155, comments: 15, date: "2024.09.04", commentCount: 7 },
   ]
 
+  // 내 글 목록
+  useEffect(() => {
+    const fetchMyPostList = async () => {
+
+      const memberId = localStorage.getItem('memberId');
+
+      try {
+        const response = await apiClient.get(`/api/posts/list/${memberId}`);
+        console.log(`멤버별 포스트 조회: ${response}`)
+
+        if (response.status === 200) {
+          const { code, data } = response.data;
+
+          if (code === '0000') {
+            setMyPostList(data);
+          }
+        }
+      } catch (error) {
+        console.log('멤버별 포스트 목록을 불러오는 중 오류 발생', error);
+      }
+    };
+
+    fetchMyPostList();
+  }, []);
+
+  // 내 좋아요 목록
+  useEffect(() => {
+    const fetchLikePostList = async () => {
+      const memberId = localStorage.getItem('memberId');
+
+      try {
+        const response = await apiClient.get(`/api/posts/like-list/${memberId}`);
+        console.log("Like Response:", response);
+
+        if (response.status === 200) {
+          const { code, data } = response.data;
+
+          if (code === '0000') {
+            setMyLikeList(data);
+          }
+        }
+      } catch (error) {
+        console.log('멤버별 좋아요 목록을 가져오는 중 오류 발생', error);
+      }
+    };
+
+    fetchLikePostList();
+  }, []);
+
   const renderContent = () => {
     switch (activeTab) {
       case "myPosts":
         return (
           <PostListContainer>
-            {posts.map((posts) => (
-              <PostItemList key={posts.id}>
-                <PostTitle>{posts.title}</PostTitle>
-                <PostContent>{posts.content}</PostContent>
+            {myPostList.map((post) => (
+              <PostItemList key={post.postId}>
+                <PostTitle>{post.title}</PostTitle>
+                <PostContent>{post.content}</PostContent>
                 <PostInfonContainer>
                   <LikeAndCommentContainer>
                     <LikeAndCommentIcon src={ic_unlike}/>
-                    <LikeAndCommentCountText>{posts.likes}</LikeAndCommentCountText>
+                    <LikeAndCommentCountText>{post.likeCount}</LikeAndCommentCountText>
                     <LikeAndCommentIcon src={ic_comment}/>
-                    <LikeAndCommentCountText>{posts.comments}</LikeAndCommentCountText>
+                    <LikeAndCommentCountText>{post.commentCount}</LikeAndCommentCountText>
                   </LikeAndCommentContainer>
-                  <DateAndViewCountText>{posts.date} · {posts.views} views</DateAndViewCountText>
+                  <DateAndViewCountText>{post.createdAt}</DateAndViewCountText>
                 </PostInfonContainer>
-
               </PostItemList>
             ))}
           </PostListContainer>
@@ -342,10 +384,10 @@ const CommunityTab = () => {
       case "myLikes" :
         return (
           <LikeListContainer>
-            {likePost.map((posts) => (
+            {myLikeList.map((posts) => (
               <LikeItemList key={posts.id}>
                 <PostOwnInfoContainer>
-                  <PostOwnProfileImage src={example_profile}/>
+                  <PostOwnProfileImage src={posts.imageUrl}/>
                   <PostOwnNickNameAndTitleContainer>
                     <PostTitle>{posts.title}</PostTitle>
                     <PostOwnNickNameContainer>
@@ -357,11 +399,11 @@ const CommunityTab = () => {
                 <PostInfonContainer>
                   <LikeAndCommentContainer>
                     <LikeAndCommentIcon src={ic_like}/>
-                    <LikeAndCommentCountText>{posts.likes}</LikeAndCommentCountText>
+                    <LikeAndCommentCountText>{posts.likeCount}</LikeAndCommentCountText>
                     <LikeAndCommentIcon src={ic_comment}/>
-                    <LikeAndCommentCountText>{posts.comments}</LikeAndCommentCountText>
+                    <LikeAndCommentCountText>{posts.commentCount}</LikeAndCommentCountText>
                   </LikeAndCommentContainer>
-                  <DateAndViewCountText>{posts.date}</DateAndViewCountText>
+                  <DateAndViewCountText>{posts.createdAt}</DateAndViewCountText>
                 </PostInfonContainer>
 
               </LikeItemList>

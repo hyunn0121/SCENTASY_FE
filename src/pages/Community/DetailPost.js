@@ -1,10 +1,13 @@
 import React from "react";
+import { useEffect, useState } from "react";
+import { useParams } from 'react-router-dom';
 import styled from "styled-components";
 
 import example_profile from '../../assets/images/default_profile_image.png';
 import ic_like from '../../assets/images/ic_like.png';
 import ic_unlike from '../../assets/images/ic_unlike.png';
 import ic_comment from '../../assets/images/ic_comment.png';
+import apiClient from "../Auth/TokenReissue";
 
 const MainContainer = styled.div`
   width: 100%;
@@ -125,15 +128,35 @@ const Divider = styled.hr`
 
 const DetailPost = () => {
 
-  const example_content = `"면접 전날 너무 긴장되는 마음에 긴장을 풀어줄 수 있는 향수를 제작했습니다.
-편안함을 주면서 너무 튀지 않는 향수를 원했고, 머스크와 우디함을 추가해 차분함이 강조됐습니다.
-향수를 뿌린 덕인지 긴장하지 않고 면접에서 하고싶은 말을 다 하고왔습니다!
-혹시나 면접날 향수를 고민하고 계시면 이 향수 추천드립니다.
-댓글 남겨주시면 정확한 정보 알려드릴게요!"`;
+  // const { postId } = useParams();
+  const [post, setPost] = useState();
+
+  // 글 상세 조회
+  useEffect(() => {
+    const fetchPostDetail = async () => {
+      try {
+        const response = await apiClient.get(`/api/posts/1`);
+        console.log(`api 요청: ${response}`);
+
+        if (response.status === 200) {
+          const { code, data } = response.data;
+
+          if (code === '0000') {
+            setPost(data);
+            console.log(`포스트 상세조회: ${data.data}`);
+          }
+        }
+      } catch (error) {
+        console.error('포스트 상세조회 중 오류 발생', error);
+      }
+    };
+
+    fetchPostDetail();
+  }, []);
 
   return(
     <MainContainer>
-      <PostTitle>예시 제목 1</PostTitle>
+      <PostTitle>post.title</PostTitle>
       <PostDate>2024.09.04</PostDate>
 
       <UserInfoContainer>
@@ -144,7 +167,7 @@ const DetailPost = () => {
 
       <PostMainContainer>
         <PostContentContainer>
-          <PostContent>{example_content}</PostContent>
+          <PostContent>post.content</PostContent>
         </PostContentContainer>
         <PerfumeInfoContainer></PerfumeInfoContainer>
       </PostMainContainer>
