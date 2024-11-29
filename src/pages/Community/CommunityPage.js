@@ -512,6 +512,9 @@ const CommunityPage = () => {
     fetchPosts();
   }, []);
 
+  if (!postList) {
+    return <div>Loading...</div>
+  }
 
   // 캐로셀 설정
   const settings = {
@@ -628,8 +631,8 @@ const CommunityPage = () => {
     navigate('/writePost');
   };
 
-  const handleDetailPostClick = (postId) => {
-    navigate(`/detailPost/${postId}`);
+  const handlePostClick = (postId) => {
+    navigate(`/community/${postId}`);
   };
 
   return (
@@ -710,8 +713,7 @@ const CommunityPage = () => {
         {postList.map((post, index) => (
           <PostItemContainer
             key={index}
-            // onClick={() => navigate(`/detailPost`)}
-            onClick={() => handleDetailPostClick(post.postId)}
+            onClick={() => handlePostClick(post.postId)}
           >
             <PostTopContainer>
               <WriterInfoContainer>
