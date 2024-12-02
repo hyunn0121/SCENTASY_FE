@@ -13,6 +13,7 @@ const MainContainer = styled.div`
   justify-content: center;
   margin: auto;
   margin-top: 60px;
+  margin-bottom: 60px;
 `;
 
 const Title = styled.h1`

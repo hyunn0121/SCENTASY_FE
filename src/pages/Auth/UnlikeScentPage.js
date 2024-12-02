@@ -68,7 +68,11 @@ const UnlikeScentPage = () => {
   const [selectedImages, setSelectedImages] = useState([]);
 
   const likedScents = JSON.parse(localStorage.getItem('likedScents'));
-  const englishNames = selectedImages.map(label => labelToEnglishMap[label]);
+  
+  const englishNames = selectedImages.map((label) => {
+    const matchedImage = images.find(image => image.kr_name === label);
+    return matchedImage ? matchedImage.en_name : null;
+  });
   
   const handleComplete = async () => {
     

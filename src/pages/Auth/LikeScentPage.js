@@ -72,24 +72,27 @@ const LikeScentPage = () => {
     window.scrollTo(0, 0); // 페이지가 로드될 때 스크롤을 맨 위로 이동
   }, []);
 
-  const handleNextClick = () => {
-    if (selectedImages.length !== 5) {
-      alert("5개를 선택해주세요.");
-      return; // 5개가 아닌 경우 함수 실행을 멈추고 경고 메시지를 표시합니다.
-    }
-
-    const englishNames = selectedImages.map(label => labelToEnglishMap[label]);
-
-    localStorage.setItem('likedScents', JSON.stringify(englishNames));
-    navigate('/unlikeScent');
-  };
-
   const handleImageClick = (label) => {
     if (selectedImages.includes(label)) {
       setSelectedImages(selectedImages.filter((item) => item !== label));
     } else if (selectedImages.length < 5) {
       setSelectedImages([...selectedImages, label]);
     }
+  };
+
+  const handleNextClick = () => {
+    if (selectedImages.length !== 5) {
+      alert("5개를 선택해주세요.");
+      return; // 5개가 아닌 경우 함수 실행을 멈추고 경고 메시지를 표시합니다.
+    }
+
+    const englishNames = selectedImages.map((label) => {
+      const matchedImage = images.find(image => image.kr_name === label);
+      return matchedImage ? matchedImage.en_name : null;
+    });
+
+    localStorage.setItem('likedScents', JSON.stringify(englishNames));
+    navigate('/unlikeScent');
   };
 
   return (

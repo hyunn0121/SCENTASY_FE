@@ -71,12 +71,12 @@ const ScentImageGrid = ({ images, selectedImages, onImageClick }) => {
           >
           <CircleImage
             src={image.src}
-            alt={image.label}
-            selected={selectedImages.includes(image.label)}
-            onClick={() => onImageClick(image.label)}
+            alt={image.kr_name}
+            selected={selectedImages.includes(image.en_name)}
+            onClick={() => onImageClick(image.en_name)}
           />
-          <Label selected={selectedImages.includes(image.label)}>
-            {image.label}
+          <Label selected={selectedImages.includes(image.en_name)}>
+            {image.kr_name}
           </Label>
           <Tooltip visible={hoveredImage === index}>{image.tooltip}</Tooltip>
         </ImageContainer>
