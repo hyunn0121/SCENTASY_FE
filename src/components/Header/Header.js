@@ -2,8 +2,11 @@ import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom'; // useNavigate 추가
 import './Header.css';
 import logo from '../../assets/images/ic_logo.png';
+import logo2 from '../../assets/images/scentasy_logo.png';
+import test from '../../assets/images/image.png';
 
 const Header = () => {
+    
     const navigate = useNavigate();
     const nickname = localStorage.getItem('nickname'); // localStorage에서 닉네임 가져오기
     const isLoggedIn = !!nickname; // 닉네임이 있으면 로그인 상태로 간주
@@ -22,7 +25,7 @@ const Header = () => {
         <header className="header">
             <div className="logo-container">
                 <a href="/about">
-                <img src={logo} alt="Logo" className="logo" />
+                <img src={logo2} alt="Logo" className="logo" />
                 </a>
             </div>
             <nav className="nav">

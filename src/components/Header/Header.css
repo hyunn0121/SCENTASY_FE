@@ -11,7 +11,8 @@
 }
 
 .logo {
-    height: 30px; /* 로고의 높이 조정 */
+    width: 150px;
+    height: 40px; /* 로고의 높이 조정 */
 }
 
 .nav ul {
